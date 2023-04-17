@@ -1,7 +1,7 @@
 # research-project-VR-controlled-robot
 
 ## Remote Raspberry Pi Access
-In Raspberry Pi network ports 22,80 have been forwarded and exposed to Internet. In order to connect remotely to Raspberry Pi please connect via ssh command:
+In Raspberry Pi network ports 22,80 have been forwarded and exposed to Internet via router port forwarding and also by using ngrok service. In order to connect remotely to Raspberry Pi please connect via ssh command:
 ```ssh devuser@153.19.214.20 -p 2222```
 
 If not available please connect via: 
