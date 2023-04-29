@@ -7,13 +7,13 @@ In Raspberry Pi network ports 22,80 have been forwarded and exposed to Internet 
 
 If not available please connect via: 
 
-```ssh devuser@0.tcp.eu.ngrok.io -p 19408```
+```ssh devuser@0.tcp.eu.ngrok.io -p 16392```
 
 Web service that listens internally on port 80 is available on: 
 
 ```http://153.19.214.20:8080/```
 
-```https://e1f8-153-19-214-20.ngrok-free.app```
+```https://22af-153-19-214-20.ngrok-free.app```
 
 If you want to upload your ssh key to Raspberry or gain password for remote access please contact your administrator :)
 
