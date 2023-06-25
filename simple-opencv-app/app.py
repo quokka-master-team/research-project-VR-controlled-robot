@@ -10,5 +10,5 @@ capture = cv2.VideoCapture(raspberry_url)
 while True:
     success, frame = capture.read()
 
-    cv2.imshow('asd', frame)
+    cv2.imshow('Captured Video', frame)
     cv2.waitKey(1)
