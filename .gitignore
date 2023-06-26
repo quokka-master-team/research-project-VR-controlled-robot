@@ -1,4 +1,7 @@
 ﻿Robot/out
+simple-opencv-app/myvenv
+simple-opencv-app/myenv
+simple-opencv-app/venv
 
 # Compiled output
 /dist
