@@ -1,3 +1,0 @@
-[submodule "external/gstreamer"]
-	path = external/gstreamer
-	url = https://gitlab.freedesktop.org/gstreamer/gstreamer.git
