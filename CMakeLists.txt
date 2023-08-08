@@ -3,9 +3,7 @@
 project ("Robot")
 add_executable (Robot "main.cpp" )
 
-if (CMAKE_VERSION VERSION_GREATER 3.12)
-  set_property(TARGET Robot PROPERTY CXX_STANDARD 20)
-endif()
+set_property(TARGET Robot PROPERTY CXX_STANDARD 20)
 
 # Find GStreamer package
 find_package(PkgConfig REQUIRED)
