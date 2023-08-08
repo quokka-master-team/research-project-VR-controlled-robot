@@ -34,4 +34,7 @@
 ## Compile & run
 1. Navigate to the installed project directory through WSL
 2. Run `build.sh` script
-3. Inside the `out` directory there would be `Robot` executable
+3. Inside the `build` directory there would be `Robot` executable
+
+### USB camera note
+If you want to run this project using WSL with USB camera, you would need to follow [this](https://learn.microsoft.com/en-us/windows/wsl/connect-usb) instruction.
