@@ -1,5 +1,6 @@
-# Installation
+# Tutorial
 
+## Installation
 1. Install **Ubuntu** distribution on your WSL 2 from cmd
     ```batch
     wsl --install ubuntu
@@ -25,3 +26,8 @@
     - Navigate to `robot.code-workspace`
     - Open it
 9. You've installed the project 🎉
+
+## Compile & run
+1. Navigate to the installed project directory through WSL
+2. Run `build.sh` script
+3. Inside the `out` directory there would be `Robot` executable
