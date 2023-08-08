@@ -17,15 +17,19 @@
     ```bash
     sudo apt-get install build-essential cmake
     ```
-7. Install this project
+7. Install project [prerequisites](https://gstreamer.freedesktop.org/documentation/installing/on-linux.html?gi-language=c#install-gstreamer-on-ubuntu-or-debian)
+    ```bash
+    sudo apt-get install libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-bad1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-tools gstreamer1.0-x gstreamer1.0-alsa gstreamer1.0-gl gstreamer1.0-gtk3 gstreamer1.0-qt5 gstreamer1.0-pulseaudio
+    ```
+8. Install this project
     ```bash
     git clone <this repository URL>
     ```
-8. Inside Visual Studio Code
+9. Inside Visual Studio Code
     - Click on `File > Open Workspace from File...`
     - Navigate to `robot.code-workspace`
     - Open it
-9. You've installed the project 🎉
+10. You've installed the project 🎉
 
 ## Compile & run
 1. Navigate to the installed project directory through WSL
