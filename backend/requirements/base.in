@@ -1,0 +1,11 @@
+fastapi
+fastapi-class
+uvicorn
+sqlalchemy
+psycopg2-binary
+alembic
+kink
+marshmallow
+webargs
+psycopg2-binary
+mypy

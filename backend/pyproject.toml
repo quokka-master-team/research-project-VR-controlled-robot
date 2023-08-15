@@ -1,0 +1,12 @@
+[tool.black]
+line-length = 79
+target-version = ['py311']
+
+[tool.flake8]
+max-line-length = 79
+
+[tool.mypy]
+warn_unused_configs = true
+disallow_untyped_defs = true
+python_version = 3.11
+ignore_missing_imports = true
