@@ -1,0 +1,68 @@
+set dotenv-load
+
+ROOT_DIR := invocation_directory()
+VENV_DIR := ROOT_DIR + '/venv'
+BIN := VENV_DIR + '/bin'
+PIP_COMPILE := BIN + '/pip-compile'
+PIP := BIN + '/pip'
+
+BLACK := BIN + '/black'
+MYPY := BIN + '/mypy'
+FLAKE := BIN + '/flake8'
+
+PROJECT_NAME := 'vr-controlled-robot'
+
+REQUIREMENTS_DIR := './requirements'
+BASE_REQUIREMENTS := REQUIREMENTS_DIR + '/base.txt'
+LINT_REQUIREMENTS := REQUIREMENTS_DIR + '/lint.txt'
+
+
+CURRENT_MIGRATION := ROOT_DIR + '/alembic/CURRENT'
+DOCKER_COMPOSE := 'docker-compose --project-name ' + PROJECT_NAME
+
+default:
+    just --list --list-heading $'Available commands\n'
+
+create-venv:
+    python -m venv venv
+    {{PIP}} install --upgrade pip
+    {{PIP}} install pip-tools
+
+compile-packages:
+    {{PIP_COMPILE}} {{REQUIREMENTS_DIR}}/base.in --upgrade
+    {{PIP_COMPILE}} {{REQUIREMENTS_DIR}}/lint.in --upgrade
+
+install-local:
+    {{PIP}} install -r {{BASE_REQUIREMENTS}}
+    {{PIP}} install -r {{LINT_REQUIREMENTS}}
+
+build-app:
+    {{DOCKER_COMPOSE}} build
+
+run-app:
+    {{DOCKER_COMPOSE}} up
+
+setup: && install-local build-app run-app
+    if ! {{path_exists(VENV_DIR)}}; then just create-venv; fi
+
+psql:
+    {{DOCKER_COMPOSE}} run --rm api psql --host=$POSTGRES_HOST --dbname=$POSTGRES_DB --username=$POSTGRES_USER
+
+lint:
+    {{BLACK}} src/
+    {{FLAKE}} src/
+    {{MYPY}} src/
+
+app-bash:
+    {{DOCKER_COMPOSE}} exec -it api bash
+
+migrate-db message:
+    {{DOCKER_COMPOSE}} run --rm api alembic revision --autogenerate -m '{{message}}'
+    @echo "$({{DOCKER_COMPOSE}} run --rm api alembic history)" | sed -E 's/<base> -> ([a-f0-9]+) \(head\), (.*)/\1 \2/' > {{CURRENT_MIGRATION}}
+
+upgrade-db:
+    {{DOCKER_COMPOSE}} run --rm api alembic upgrade head
+
+remove-containers:
+    {{DOCKER_COMPOSE}} stop
+    {{DOCKER_COMPOSE}} down -v
