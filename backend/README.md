@@ -10,6 +10,17 @@
    POSTGRES_HOST=db
    POSTGRES_PORT=5432
    POSTGRES_DB=db
+   
+   APP_SECRET_KEY=some-random-string
+   IAM_CLIENT_ID=
+   IAM_CLIENT_SECRET=
+   IAM_DOMAIN=
    ```
-4. Make sure docker is running.
-5. Run `just setup` in backend directory.
+4. For IAM data ask one of the IAM admins: @xTaube or @MD-00
+5. Make sure docker is running.
+6. Run `just setup` in backend directory.
+
+## How to obtain authorization token
+1. Enter `localhost:8000/api/auth` in web browser.
+2. Sing up or sing in our application IAM.
+3. You should be redirected to page with your token data.
