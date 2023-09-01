@@ -7,7 +7,12 @@ ENV PYTHONUNBUFFERED 1
 
 COPY requirements /tmp/requirements
 
-RUN apk --update add bash postgresql-client
+RUN apk --update add  \
+    bash  \
+    gcc  \
+    libc-dev  \
+    libffi-dev  \
+    postgresql-client
 
 RUN pip install -r /tmp/requirements/base.txt
 RUN pip install -r /tmp/requirements/lint.txt

@@ -9,3 +9,7 @@ marshmallow
 webargs
 psycopg2-binary
 mypy
+authlib
+httpx
+itsdangerous
+pyjwt
