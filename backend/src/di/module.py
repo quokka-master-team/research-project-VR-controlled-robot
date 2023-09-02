@@ -7,8 +7,9 @@ class Module:
 
     container: Container = container
 
+    @classmethod
     @abstractmethod
-    def bootstrap(self) -> None:
+    def bootstrap(cls) -> None:
         """
         Initiates injections.
         """

@@ -26,3 +26,4 @@ class Settings(BaseSettings):
         "IAM_CLIENT_SECRET", "client-secret"
     )
     IAM_DOMAIN: str = os.environ.get("IAM_DOMAIN", "client-domain")
+    IAM_ALGORITHMS: list[str] = [os.environ.get("IAM_ALGORITHMS", "RS256")]
