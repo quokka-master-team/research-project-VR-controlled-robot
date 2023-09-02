@@ -1,8 +1,11 @@
 from fastapi_class import View
-from fastapi import APIRouter, Request, Response
+from fastapi import APIRouter, Request, Response, Depends
 from src.di import container
 from authlib.integrations.starlette_client import OAuth
 from kink import inject
+from src.auth.authentication import get_authenticated_user
+from typing import Annotated
+from src.user.domain.dtos import UserDto
 
 router = APIRouter()
 
@@ -30,3 +33,15 @@ class AuthCallbackResource:
 
     async def get(self, request: Request) -> Response:
         return await self.oauth.iam.authorize_access_token(request)
+
+
+@View(router, path="/test")
+class AuthTestResource:
+    @staticmethod
+    async def get(
+        current_user: Annotated[UserDto, Depends(get_authenticated_user)]
+    ) -> Response:
+        return Response(
+            content=f"User: {current_user.email} successfully authenticated",
+            status_code=200,
+        )
