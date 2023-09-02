@@ -1,0 +1,46 @@
+from typing import Annotated
+from fastapi import Depends
+from fastapi.security import OAuth2PasswordBearer
+from src.di import container
+from src.auth.ports import IAMTokenVerificationService
+from src.user.domain.dtos import UserDto
+from src.core.types.exceptions import InvalidEmail, MaximumLengthExceeded
+from src.user.domain.exceptions import EmailMismatch
+from fastapi import HTTPException, status
+from src.auth.exceptions import (
+    InvalidToken,
+)
+from src.core.api.messages import ApiErrors, Errors
+
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+
+def get_authenticated_user(
+    token: Annotated[str, Depends(oauth2_scheme)],
+    token_verification_service: Annotated[
+        IAMTokenVerificationService,
+        Depends(lambda: container[IAMTokenVerificationService]),
+    ],
+) -> UserDto:
+    try:
+        return token_verification_service.process_token(token)
+    except (
+        EmailMismatch,
+        InvalidToken,
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=ApiErrors.unauthorized,
+        )
+
+    except MaximumLengthExceeded:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail={"email": Errors.maximum_length_exceeded},
+        )
+    except InvalidEmail:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail={"email": Errors.invalid_email},
+        )
