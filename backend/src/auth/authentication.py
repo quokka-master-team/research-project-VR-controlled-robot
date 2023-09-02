@@ -23,6 +23,8 @@ def get_authenticated_user(
         Depends(lambda: container[IAMTokenVerificationService]),
     ],
 ) -> UserDto:
+    """Verifies token and return user linked with this token"""
+
     try:
         return token_verification_service.process_token(token)
     except (

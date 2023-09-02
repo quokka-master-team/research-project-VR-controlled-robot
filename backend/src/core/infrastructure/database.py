@@ -12,6 +12,9 @@ class SessionProvider:
     def __init__(self, session_maker: orm.sessionmaker) -> None:
         self.session_maker = session_maker
 
+    def create_session(self) -> orm.Session:
+        return self.session_maker()
+
     @contextmanager
     def get_session(self) -> Iterator[orm.Session]:
         """
@@ -20,7 +23,7 @@ class SessionProvider:
             session (Session):
         """
 
-        session: orm.Session = self.session_maker()
+        session: orm.Session = self.create_session()
 
         yield session
 

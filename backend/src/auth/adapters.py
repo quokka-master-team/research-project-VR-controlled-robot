@@ -11,6 +11,8 @@ from src.auth.exceptions import (
 
 @inject(container=container)  # type: ignore
 class Auth0TokenVerificationService:
+    """Service responsible for auth0 token verification"""
+
     def __init__(
         self,
         user_service: UserServiceInterface,
