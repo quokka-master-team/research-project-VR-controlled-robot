@@ -1,5 +1,8 @@
 from sqlalchemy import Engine, create_engine
-from src.core.database import SessionProvider, SessionProviderFactory
+from src.core.infrastructure.database import (
+    SessionProvider,
+    SessionProviderFactory,
+)
 from src.di.module import Module
 from src.config import Settings
 
