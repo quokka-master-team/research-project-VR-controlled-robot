@@ -8,7 +8,8 @@ class Settings(BaseSettings):
     PROJECT_ROOT: str = os.path.abspath((os.path.dirname(__name__)))
     URL_PREFIX_FORMAT: str = "/api/{prefix}"
     ROUTERS: list[tuple[str, str]] = [
-        ("src.auth.api", "auth")
+        ("src.auth.api", "auth"),
+        ("src.user.api", "users"),
     ]  # module, prefix
 
     SQLALCHEMY_DB_URI: str = (

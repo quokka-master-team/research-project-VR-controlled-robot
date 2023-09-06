@@ -1,7 +1,8 @@
 from typing import Protocol, Any
 from src.core.types import Email
 from uuid import UUID
-from src.user.domain.dtos import UserDto
+from src.user.users.domain.dtos import UserDto
+from src.user.roles.ports import RoleRepositoryInterface
 
 
 class UserRepositoryInterface(Protocol):
@@ -17,6 +18,7 @@ class UserRepositoryInterface(Protocol):
 
 class UserUnitOfWorkInterface(Protocol):
     user_repository: UserRepositoryInterface
+    role_repository: RoleRepositoryInterface
 
     def __enter__(self) -> None:
         ...

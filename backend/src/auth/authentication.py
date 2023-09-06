@@ -3,9 +3,9 @@ from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 from src.di import container
 from src.auth.ports import IAMTokenVerificationService
-from src.user.domain.dtos import UserDto
+from src.user.users.domain.dtos import UserDto
 from src.core.types.exceptions import InvalidEmail, MaximumLengthExceeded
-from src.user.domain.exceptions import EmailMismatch
+from src.user.users.domain.exceptions import EmailMismatch
 from fastapi import HTTPException, status
 from src.auth.exceptions import (
     InvalidToken,

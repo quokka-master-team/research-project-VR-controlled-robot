@@ -1,9 +1,15 @@
 from kink import inject
 from src.di import container
-from jwt import PyJWKClient, PyJWKClientError, DecodeError, decode
-from src.user.domain.interfaces import UserServiceInterface
+from jwt import (
+    PyJWKClient,
+    PyJWKClientError,
+    DecodeError,
+    decode,
+    ExpiredSignatureError,
+)
+from src.user.users.domain.ports import UserServiceInterface
 from src.core.types import Email
-from src.user.domain.dtos import UserDto
+from src.user.users.domain.services import UserDto
 from src.auth.exceptions import (
     InvalidToken,
 )
@@ -40,7 +46,7 @@ class Auth0TokenVerificationService:
     def process_token(self, token: str) -> UserDto:
         try:
             decoded_token = self._decode_token(token)
-        except (PyJWKClientError, DecodeError):
+        except (PyJWKClientError, DecodeError, ExpiredSignatureError):
             raise InvalidToken
 
         return self._user_service.verify_or_create_user(
