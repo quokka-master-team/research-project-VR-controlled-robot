@@ -1,10 +1,10 @@
 from src.core.types import Email
 import sqlalchemy as sqla
 from sqlalchemy.orm import Session
-from src.user.infrastructure.models import User
+from src.user.users.infrastructure.models import User
 from uuid import uuid4, UUID
-from src.user.domain.dtos import UserDto
-from src.user.domain.factories import user_dto_factory
+from src.user.users.domain.dtos import UserDto
+from src.user.users.domain.factories import user_dto_factory
 
 
 class UserRepository:

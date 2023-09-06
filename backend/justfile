@@ -42,7 +42,7 @@ build-app:
 run-app:
     {{DOCKER_COMPOSE}} up
 
-setup: && install-local build-app run-app
+setup: && install-local build-app run-app upgrade-db
     if ! {{path_exists(VENV_DIR)}}; then just create-venv; fi
 
 psql:
