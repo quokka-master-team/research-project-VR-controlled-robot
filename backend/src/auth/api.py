@@ -5,7 +5,7 @@ from authlib.integrations.starlette_client import OAuth
 from kink import inject
 from src.auth.authentication import get_authenticated_user
 from typing import Annotated
-from src.user.domain.dtos import UserDto
+from src.user.users.domain.dtos import UserDto
 
 router = APIRouter()
 

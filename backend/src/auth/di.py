@@ -3,7 +3,7 @@ from src.auth.adapters import Auth0TokenVerificationService
 from src.auth.ports import IAMTokenVerificationService
 from jwt import PyJWKClient
 from src.config import Settings
-from src.user.domain.interfaces import UserServiceInterface
+from src.user.users.domain.ports import UserServiceInterface
 
 
 class AuthModule(Module):

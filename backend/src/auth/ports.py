@@ -1,5 +1,5 @@
 from typing import Protocol
-from src.user.domain.dtos import UserDto
+from src.user.users.domain.dtos import UserDto
 
 
 class IAMTokenVerificationService(Protocol):
