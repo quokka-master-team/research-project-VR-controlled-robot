@@ -5,8 +5,7 @@ int main(int argc, char *argv[])
     gst_init(&argc, &argv);
 
     // Create pipeline
-    GstElement *pipeline = gst_parse_launch("v4l2src device=/dev/video0 ! videoconvert ! autovideosink", NULL); // It should work.
-    // If not, try: gst-launch-1.0 v4l2src device=/dev/video0 ! 'image/jpeg, width=640, height=480, format=MJPG' ! jpegdec ! autovideosink
+    GstElement *pipeline = gst_parse_launch("v4l2src device=/dev/video0 ! videoconvert ! autovideosink", NULL);
 
     if (!pipeline) {
         g_print("Failed to create pipeline\n");

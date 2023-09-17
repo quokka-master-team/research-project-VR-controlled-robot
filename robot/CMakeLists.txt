@@ -1,7 +1,7 @@
 ﻿cmake_minimum_required (VERSION 3.13)
 
 project ("Robot")
-add_executable (Robot "main.cpp" )
+add_executable (Robot "src/main.cpp" )
 
 set_property(TARGET Robot PROPERTY CXX_STANDARD 20)
 
