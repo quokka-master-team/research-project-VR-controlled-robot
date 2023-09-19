@@ -6,12 +6,14 @@ class VideoStream
     std::string name;
     GstElement* pipeline = nullptr;
     GMainLoop* streamLoop = nullptr;
-    VideoStreamManager& manager = VideoStreamManager::GetInstance();
+    
+    VideoStreamManager& manager = VideoStreamManager::Get();
+    Log& log = Log::Get();
 
     void ValidatePipeline(GError*& handle);
 
 public:
-    VideoStream(const std::string&  name = "undefined") : name(name)
+    VideoStream(const std::string& name = "undefined") : name(name)
     {}
 
     void SetPipeline(const std::string& str);

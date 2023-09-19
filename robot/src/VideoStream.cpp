@@ -3,14 +3,14 @@
 
 void VideoStream::ValidatePipeline(GError*& handle)
 {
+    if (handle)
+    {
+        throw std::runtime_error("Failed to create pipeline: " + std::string(handle->message));
+    }
+
     if (!this->pipeline)
     {
-        if (handle)
-        {
-            throw std::runtime_error("Failed to create pipeline: " + std::string(handle->message));
-        }
-        
-        throw std::runtime_error("Failed to create pipeline: Unknown error!");
+        throw std::runtime_error("Failed to create pipeline: Unknown error.");
     }
 }
 
