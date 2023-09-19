@@ -9,7 +9,7 @@ Dedicated **only** for Linux 🐧
     ```
 2. Install basic prerequisites
     ```bash
-    sudo apt-get install build-essential cmake
+    sudo apt-get install build-essential cmake libspdlog-dev
     ```
 3. Install project [prerequisites](https://gstreamer.freedesktop.org/documentation/installing/on-linux.html?gi-language=c#install-gstreamer-on-ubuntu-or-debian)
     ```bash
