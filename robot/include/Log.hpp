@@ -22,22 +22,22 @@ public:
 		return instance;
 	}
 
-	void Info(const std::string& message) const
+	inline void Info(const std::string& message) const
 	{
 		spdlog::info(message);
 	}
 
-	void Warning(const std::string& message) const
+	inline void Warning(const std::string& message) const
 	{
 		spdlog::warn(message);
 	}
 
-	void Error(const std::string& message) const
+	inline void Error(const std::string& message) const
 	{
 		spdlog::error(message);
 	}
 
-	void Critical(const std::string& message) const
+	inline void Critical(const std::string& message) const
 	{
 		spdlog::critical(message);
 	}
