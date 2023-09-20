@@ -12,7 +12,7 @@ class VideoStreamManager {
 
     ~VideoStreamManager() {
         gst_deinit();
-        log.Info("Goodbye!");
+        log.Info("Goodbye! (~˘▾˘)~");
     }
 
 public:
