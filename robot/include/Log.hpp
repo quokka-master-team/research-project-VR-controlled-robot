@@ -22,6 +22,11 @@ public:
 		return instance;
 	}
 
+	inline void Debug(const std::string& message) const
+	{
+		spdlog::debug(message);
+	}
+
 	inline void Info(const std::string& message) const
 	{
 		spdlog::info(message);

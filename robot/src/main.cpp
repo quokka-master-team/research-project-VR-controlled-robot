@@ -7,7 +7,7 @@ int main(int argc, char *argv[])
     try 
     {
         stream.SetPipeline("v4l2src device=/dev/video0 ! videoconvert ! autovideosink");
-        stream.Start();
+        stream.ListenOn("127.0.0.1", 8080);
     }
     catch (const std::exception& e)
     {
