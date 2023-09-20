@@ -20,6 +20,7 @@ class VideoStream
     Log& log = Log::Get();
 
     void ValidatePipeline(GError*& handle);
+    void HandleCommand(const std::string& command);
     void HandleRequest(std::shared_ptr<asio::ip::tcp::socket> socket);
     void ListenForRequests();
 

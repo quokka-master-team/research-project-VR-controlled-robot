@@ -15,6 +15,15 @@ void VideoStream::ValidatePipeline(GError*& handle)
     }
 }
 
+void VideoStream::HandleCommand(const std::string& command)
+{
+    log.Info("Received command: " + command);
+
+    if (command == "START")    this->Start();
+    if (command == "STOP")     this->Stop();
+    if (command == "EXIT")     this->listenToClient.store(false);
+}
+
 void VideoStream::HandleRequest(std::shared_ptr<asio::ip::tcp::socket> socket)
 {
     auto buffer = std::make_shared<asio::streambuf>();
@@ -33,11 +42,7 @@ void VideoStream::HandleRequest(std::shared_ptr<asio::ip::tcp::socket> socket)
             std::string line;
             std::getline(input, line);
 
-            log.Info("Received command: " + line);
-
-            if (line == "START")    this->Start();
-            if (line == "STOP")     this->Stop();
-            if (line == "EXIT")     this->listenToClient.store(false);
+            this->HandleCommand(line);
             
             socket->close();
         }
