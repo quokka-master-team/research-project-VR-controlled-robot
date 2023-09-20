@@ -130,6 +130,14 @@ void VideoStream::Stop()
 
 VideoStream::~VideoStream()
 {
+    this->listenToClient.store(false);
+    this->clientContext.stop();
+
+    if (this->clientListener.joinable())
+    {
+        this->clientListener.join();
+    }
+
     this->Stop();
 
     if (this->pipeline)
@@ -141,14 +149,6 @@ VideoStream::~VideoStream()
     if (this->streamLoop)
     {
         g_main_loop_unref(this->streamLoop);
-    }
-
-    this->listenToClient.store(false);
-    this->clientContext.stop();
-
-    if (this->clientListener.joinable())
-    {
-        this->clientListener.join();
     }
     
     log.Info(this->name + " closed!");
