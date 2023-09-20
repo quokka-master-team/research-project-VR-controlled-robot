@@ -1,11 +1,11 @@
 ﻿cmake_minimum_required (VERSION 3.10)
 
-project ("Robot")
+project ("Camera")
 file(GLOB src_files "include/*.hpp" "src/*.cpp")
-add_executable (Robot ${src_files} )
-include_directories(Robot PRIVATE "include")
+add_executable (Camera ${src_files} )
+include_directories(Camera PRIVATE "include")
 
-set_property(TARGET Robot PROPERTY CXX_STANDARD 20)
+set_property(TARGET Camera PROPERTY CXX_STANDARD 20)
 
 # Find GStreamer package
 find_package(PkgConfig REQUIRED)
@@ -21,10 +21,10 @@ find_path(ASIO_INCLUDE_DIR
     NAMES asio.hpp
     HINTS /usr/include
     PATH_SUFFIXES asio)
-target_include_directories(Robot PRIVATE ${ASIO_INCLUDE_DIR})
+target_include_directories(Camera PRIVATE ${ASIO_INCLUDE_DIR})
 
 # Link against libraries
-target_link_libraries(Robot
+target_link_libraries(Camera
     PkgConfig::gstreamer
     PkgConfig::gstreamer-app
     PkgConfig::gstreamer-video
