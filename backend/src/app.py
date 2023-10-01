@@ -3,7 +3,8 @@ from authlib.integrations.starlette_client import OAuth
 from starlette.middleware.sessions import SessionMiddleware
 from src.core.utils import import_from
 from src.config import Settings
-from src.di import all_modules, container
+from src.di import all_modules
+from kink import di
 
 
 def create_app(settings: type[Settings] = Settings) -> FastAPI:
@@ -34,7 +35,7 @@ def configure_di(settings: Settings) -> None:
         settings (Settings: application settings
     """
 
-    container[Settings] = settings
+    di[Settings] = settings
     for module in all_modules:
         module.bootstrap()
 
@@ -67,7 +68,7 @@ def configure_extensions(settings: Settings) -> None:
         server_metadata_url=f"https://{settings.IAM_DOMAIN}/"
         f".well-known/openid-configuration",
     )
-    container[OAuth] = oauth
+    di[OAuth] = oauth
 
 
 def configure_middleware(app: FastAPI, settings: Settings) -> None:

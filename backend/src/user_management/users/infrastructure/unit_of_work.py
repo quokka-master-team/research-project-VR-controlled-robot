@@ -1,7 +1,9 @@
 from typing import Any
 from src.core.infrastructure.database import SessionProvider
-from src.user.users.infrastructure.repository import UserRepository
-from src.user.roles.repositories import RoleRepository
+from src.user_management.users.infrastructure.repository import UserRepository
+from src.user_management.permissions.infrastructure.repositories import (
+    RoleRepository,
+)
 
 
 class UserUnitOfWork:

@@ -1,13 +1,17 @@
 from src.di.module import Module
-from src.user.users.domain.ports import (
+from src.user_management.users.domain.ports import (
     UserUnitOfWorkInterface,
     UserServiceInterface,
 )
-from src.user.users.infrastructure.unit_of_work import UserUnitOfWork
-from src.user.users.domain.services import UserService
+from src.user_management.users.infrastructure.unit_of_work import (
+    UserUnitOfWork,
+)
+from src.user_management.users.application.services import UserService
 from src.core.infrastructure.database import SessionProvider
-from src.user.roles.ports import PermissionValidator
-from src.user.roles.adapters import PermissionValidatorAdapter
+from src.user_management.permissions.domain.ports import PermissionValidator
+from src.user_management.permissions.application.adapters import (
+    UserPermissionValidator,
+)
 
 
 class UserModule(Module):
@@ -19,6 +23,6 @@ class UserModule(Module):
         cls.container[UserServiceInterface] = UserService(
             cls.container[UserUnitOfWorkInterface]
         )
-        cls.container[PermissionValidator] = PermissionValidatorAdapter(
+        cls.container[PermissionValidator] = UserPermissionValidator(
             cls.container[SessionProvider]
         )

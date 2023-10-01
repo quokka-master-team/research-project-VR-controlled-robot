@@ -1,11 +1,11 @@
 from typing import Annotated
 from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
-from src.di import container
+from kink import di
 from src.auth.ports import IAMTokenVerificationService
-from src.user.users.domain.dtos import UserDto
+from src.user_management.users.domain.dtos import UserDto
 from src.core.types.exceptions import InvalidEmail, MaximumLengthExceeded
-from src.user.users.domain.exceptions import EmailMismatch
+from src.user_management.users.domain.exceptions import EmailMismatch
 from fastapi import HTTPException, status
 from src.auth.exceptions import (
     InvalidToken,
@@ -20,7 +20,7 @@ def get_authenticated_user(
     token: Annotated[str, Depends(oauth2_scheme)],
     token_verification_service: Annotated[
         IAMTokenVerificationService,
-        Depends(lambda: container[IAMTokenVerificationService]),
+        Depends(lambda: di[IAMTokenVerificationService]),
     ],
 ) -> UserDto:
     """Verifies token and return user linked with this token"""

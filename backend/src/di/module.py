@@ -1,11 +1,11 @@
 from abc import abstractmethod
-from src.di.container import Container, container
+from kink import Container, di
 
 
 class Module:
     """Contains dependency injection configuration for the container."""
 
-    container: Container = container
+    container: Container = di
 
     @classmethod
     @abstractmethod

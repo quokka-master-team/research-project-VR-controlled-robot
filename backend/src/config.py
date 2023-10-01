@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     URL_PREFIX_FORMAT: str = "/api/{prefix}"
     ROUTERS: list[tuple[str, str]] = [
         ("src.auth.api", "auth"),
-        ("src.user.api", "users"),
+        ("src.user_management.api", "users"),
     ]  # module, prefix
 
     SQLALCHEMY_DB_URI: str = (

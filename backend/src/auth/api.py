@@ -1,17 +1,16 @@
 from fastapi_class import View
 from fastapi import APIRouter, Request, Response, Depends
-from src.di import container
 from authlib.integrations.starlette_client import OAuth
 from kink import inject
 from src.auth.authentication import get_authenticated_user
 from typing import Annotated
-from src.user.users.domain.dtos import UserDto
+from src.user_management.users.domain.dtos import UserDto
 
 router = APIRouter()
 
 
 @View(router)
-@inject(container=container)
+@inject
 class AuthResource:
     """Redirects to IAM login page"""
 
@@ -24,7 +23,7 @@ class AuthResource:
 
 
 @View(router, path="/callback")
-@inject(container=container)
+@inject
 class AuthCallbackResource:
     """Returns user token after successful authorization"""
 
