@@ -1,21 +1,21 @@
-# research-project-VR-controlled-robot
+# Tutorial
+Dedicated **only** for Linux 🐧
 
-## Remote Raspberry Pi Access
-In Raspberry Pi network ports 22,80 have been forwarded and exposed to Internet via router port forwarding and also by using ngrok service. In order to connect remotely to Raspberry Pi please connect via ssh command:
+## Installation [Debian]
+1. Update packages
+    ```bash
+    sudo apt-get update
+    sudo apt-get upgrade
+    ```
+2. Install prerequisites
+    ```bash
+    sudo apt-get install build-essential cmake libspdlog-dev libasio-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-bad1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-tools gstreamer1.0-x gstreamer1.0-alsa gstreamer1.0-gl gstreamer1.0-gtk3 gstreamer1.0-qt5 gstreamer1.0-pulseaudio
+    ```
+3. Inside Visual Studio Code
+    - Click on `File > Open Workspace from File...`
+    - Open `camera.code-workspace`
+4. You've installed the project 🎉
 
-```ssh devuser@153.19.214.20 -p 2222```
-
-If not available please connect via: 
-
-```ssh devuser@4.tcp.eu.ngrok.io -p 10562```
-
-Web service that listens internally on port 80 is available on: 
-
-```http://153.19.214.20:8080/```
-
-```https://211a-153-19-214-20.ngrok-free.app```
-
-If you want to upload your ssh key to Raspberry or gain password for remote access please contact your administrator :)
-
-## Notes
-- Please refrain from unecessary rebooting or shutting down the Raspberry Pi!
+## Compile & run
+1. Run `build.sh` script
+2. Inside the `build` directory there would be `Camera` executable
