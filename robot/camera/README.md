@@ -19,3 +19,6 @@ Dedicated **only** for Linux 🐧
 ## Compile & run
 1. Run `build.sh` script
 2. Inside the `build` directory there would be `Camera` executable
+
+## Testing
+If you **only** want to test the current software, you could use the `Dockerfile` image.
