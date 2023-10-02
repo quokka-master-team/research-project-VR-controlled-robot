@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
     auto pipeline = "v4l2src device=/dev/video0 ! videoconvert ! autovideosink";
 
     int opt;
-    while ((opt = getopt(argc, argv, "s:p:l:")) != -1)
+    while ((opt = getopt(argc, argv, "s:p:P:")) != -1)
     {
         switch (opt)
         {
