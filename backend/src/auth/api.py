@@ -1,5 +1,6 @@
 from fastapi_class import View
 from fastapi import APIRouter, Request, Response, Depends
+from fastapi.responses import RedirectResponse
 from authlib.integrations.starlette_client import OAuth
 from kink import inject
 from src.auth.authentication import get_authenticated_user
@@ -17,9 +18,12 @@ class AuthResource:
     def __init__(self, oauth: OAuth) -> None:
         self.oauth = oauth
 
-    async def get(self, request: Request) -> Response:
-        redirect_uri = request.url_for("Get Auth Callback Resource")
-        return await self.oauth.iam.authorize_redirect(request, redirect_uri)
+    async def get(self, request: Request, redirect_uri: str) -> Response:
+        request.session["post_authorization_redirect"] = redirect_uri
+        return await self.oauth.iam.authorize_redirect(
+            request,
+            request.url_for("Get Auth Callback Resource")
+        )
 
 
 @View(router, path="/callback")
@@ -30,8 +34,9 @@ class AuthCallbackResource:
     def __init__(self, oauth: OAuth) -> None:
         self.oauth = oauth
 
-    async def get(self, request: Request) -> Response:
-        return await self.oauth.iam.authorize_access_token(request)
+    async def get(self, request: Request) -> RedirectResponse:
+        request.session["token"] = await self.oauth.iam.authorize_access_token(request)
+        return RedirectResponse(request.session.pop("post_authorization_redirect"))
 
 
 @View(router, path="/test")
