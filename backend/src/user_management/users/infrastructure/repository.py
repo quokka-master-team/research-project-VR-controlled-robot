@@ -1,10 +1,10 @@
 from src.core.types import Email
 import sqlalchemy as sqla
 from sqlalchemy.orm import Session
-from src.user.users.infrastructure.models import User
+from src.user_management.users.infrastructure.models import User
 from uuid import uuid4, UUID
-from src.user.users.domain.dtos import UserDto
-from src.user.users.domain.factories import user_dto_factory
+from src.user_management.users.domain.dtos import UserDto
+from src.user_management.users.infrastructure.mappers import user_mapper
 
 
 class UserRepository:
@@ -17,7 +17,7 @@ class UserRepository:
         if user := self._session.scalar(
             sqla.select(User).where(User.id == user_id)
         ):
-            return user_dto_factory(user)
+            return user_mapper(user)
 
         return None
 
@@ -25,7 +25,7 @@ class UserRepository:
         if user := self._session.scalar(
             sqla.select(User).where(User.iam_id == iam_id)
         ):
-            return user_dto_factory(user)
+            return user_mapper(user)
 
         return None
 

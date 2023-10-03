@@ -1,3 +1,3 @@
-from .types import Email
+from .email import Email
 
 __all__ = ["Email"]

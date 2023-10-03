@@ -2,10 +2,10 @@ from fastapi_class import View
 from fastapi import APIRouter, Response, Depends, HTTPException, status
 from src.auth.authentication import get_authenticated_user
 from typing import Annotated
-from src.user.users.domain.dtos import UserDto
-from src.user.roles.ports import PermissionValidator
-from src.di import container
-from src.consts import Permissions
+from kink import di
+from src.user_management.users.domain.dtos import UserDto
+from src.user_management.permissions.domain.ports import PermissionValidator
+from src.user_management.permissions.domain.enums import Permissions
 from src.core.api.messages import ApiErrors
 
 router = APIRouter()
@@ -17,11 +17,11 @@ class UserTestResource:
     async def get(
         current_user: Annotated[UserDto, Depends(get_authenticated_user)],
         permission_validator: PermissionValidator = Depends(
-            lambda: container[PermissionValidator]
+            lambda: di[PermissionValidator]
         ),
     ) -> Response:
-        if not permission_validator.validate_user_permission(
-            user_id=current_user.id, permission=Permissions.test_permission
+        if not permission_validator.validate(
+            entity_id=current_user.id, permission=Permissions.test_permission
         ):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,

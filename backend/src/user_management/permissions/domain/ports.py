@@ -1,13 +1,11 @@
 from typing import Protocol
 from uuid import UUID
-from src.consts import Permissions, Roles
-from src.user.roles.dtos import RoleDto
+from src.user_management.permissions.domain.enums import Permissions, Roles
+from src.user_management.permissions.domain.dtos import RoleDto
 
 
 class PermissionValidator(Protocol):
-    def validate_user_permission(
-        self, user_id: UUID, permission: Permissions
-    ) -> bool:
+    def validate(self, entity_id: UUID, permission: Permissions) -> bool:
         ...
 
 

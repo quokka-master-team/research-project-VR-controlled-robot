@@ -1,5 +1,4 @@
 from kink import inject
-from src.di import container
 from jwt import (
     PyJWKClient,
     PyJWKClientError,
@@ -7,15 +6,15 @@ from jwt import (
     decode,
     ExpiredSignatureError,
 )
-from src.user.users.domain.ports import UserServiceInterface
+from src.user_management.users.domain.ports import UserServiceInterface
 from src.core.types import Email
-from src.user.users.domain.services import UserDto
+from src.user_management.users.application.services import UserDto
 from src.auth.exceptions import (
     InvalidToken,
 )
 
 
-@inject(container=container)  # type: ignore
+@inject
 class Auth0TokenVerificationService:
     """Service responsible for auth0 token verification"""
 

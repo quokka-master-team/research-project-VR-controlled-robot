@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from uuid import UUID
-from src.consts import Roles
+from src.user_management.permissions.domain.enums import Roles
 
 
 @dataclass

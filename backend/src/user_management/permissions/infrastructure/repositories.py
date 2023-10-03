@@ -1,15 +1,14 @@
 from sqlalchemy.orm import Session
 import sqlalchemy as sqla
 from uuid import UUID
-from src.consts import Permissions
-from src.user.roles.models import (
+from src.user_management.permissions.domain.enums import Permissions, Roles
+from src.user_management.permissions.infrastructure.models import (
     roles_permissions,
     users_roles,
     Permission,
     Role,
 )
-from src.consts import Roles
-from src.user.roles.dtos import RoleDto
+from src.user_management.permissions.domain.dtos import RoleDto
 
 
 def user_has_permission(

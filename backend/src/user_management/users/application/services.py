@@ -1,10 +1,13 @@
-from src.user.users.domain.ports import UserUnitOfWorkInterface
+from src.user_management.users.domain.ports import UserUnitOfWorkInterface
 from uuid import UUID
-from src.user.users.domain.dtos import UserDto
+from src.user_management.users.domain.dtos import UserDto
 from src.core.types import Email
-from src.user.users.domain.exceptions import UserNotFound, EmailMismatch
-from src.consts import Roles
-from src.user.roles.exceptions import RoleNotFound
+from src.user_management.users.domain.exceptions import (
+    UserNotFound,
+    EmailMismatch,
+)
+from src.user_management.permissions.domain.enums import Roles
+from src.user_management.permissions.domain.exceptions import RoleNotFound
 
 
 class UserService:
