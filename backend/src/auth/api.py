@@ -35,8 +35,8 @@ class AuthCallbackResource:
         self.oauth = oauth
 
     async def get(self, request: Request) -> RedirectResponse:
-        request.session["token"] = await self.oauth.iam.authorize_access_token(request)
-        return RedirectResponse(request.session.pop("post_authorization_redirect"))
+        token = await self.oauth.iam.authorize_access_token(request)
+        return RedirectResponse(f"{request.session.pop('post_authorization_redirect')}?token={token}")
 
 
 @View(router, path="/test")
