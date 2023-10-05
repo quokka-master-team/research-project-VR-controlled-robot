@@ -38,7 +38,7 @@ class AuthCallbackResource:
         token = await self.oauth.iam.authorize_access_token(request)
         return RedirectResponse(
             f"{request.session.pop('post_authorization_redirect')}"
-            f"?token={b64encode(token)}"
+            f"?token={b64encode(dict(token))}"
         )
 
 
