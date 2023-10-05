@@ -6,6 +6,7 @@ from kink import inject
 from src.auth.authentication import get_authenticated_user
 from typing import Annotated
 from src.user_management.users.domain.dtos import UserDto
+import json
 from base64 import b64encode
 
 router = APIRouter()
@@ -36,9 +37,10 @@ class AuthCallbackResource:
 
     async def get(self, request: Request) -> RedirectResponse:
         token = await self.oauth.iam.authorize_access_token(request)
+        encoded_token = b64encode(json.dumps(token).encode())
         return RedirectResponse(
             f"{request.session.pop('post_authorization_redirect')}"
-            f"?token={b64encode(dict(token))}"
+            f"?token={encoded_token}"
         )
 
 
