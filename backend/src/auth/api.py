@@ -6,6 +6,7 @@ from kink import inject
 from src.auth.authentication import get_authenticated_user
 from typing import Annotated
 from src.user_management.users.domain.dtos import UserDto
+from base64 import b64encode
 
 router = APIRouter()
 
@@ -21,8 +22,7 @@ class AuthResource:
     async def get(self, request: Request, redirect_uri: str) -> Response:
         request.session["post_authorization_redirect"] = redirect_uri
         return await self.oauth.iam.authorize_redirect(
-            request,
-            request.url_for("Get Auth Callback Resource")
+            request, request.url_for("Get Auth Callback Resource")
         )
 
 
@@ -36,7 +36,10 @@ class AuthCallbackResource:
 
     async def get(self, request: Request) -> RedirectResponse:
         token = await self.oauth.iam.authorize_access_token(request)
-        return RedirectResponse(f"{request.session.pop('post_authorization_redirect')}?token={token}")
+        return RedirectResponse(
+            f"{request.session.pop('post_authorization_redirect')}"
+            f"?token={b64encode(token)}"
+        )
 
 
 @View(router, path="/test")
