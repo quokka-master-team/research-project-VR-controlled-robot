@@ -1,4 +1,4 @@
-from typing import Protocol, Any
+from typing import Protocol, Self, Any
 from src.core.types import Email
 from uuid import UUID
 from src.user_management.users.domain.dtos import UserDto
@@ -18,11 +18,11 @@ class UserRepositoryInterface(Protocol):
         ...
 
 
-class UserUnitOfWorkInterface(Protocol):
+class UserUowInterface(Protocol):
     user_repository: UserRepositoryInterface
     role_repository: RoleRepositoryInterface
 
-    def __enter__(self) -> None:
+    def __enter__(self) -> Self:
         ...
 
     def __exit__(self, *args: Any) -> None:

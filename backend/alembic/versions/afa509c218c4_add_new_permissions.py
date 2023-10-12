@@ -31,12 +31,12 @@ def upgrade() -> None:
     op.execute(
         """INSERT INTO permissions VALUES (gen_random_uuid(), 'book_stream_unit', now(), now());"""
     )
+    op.execute(
+        """INSERT INTO permissions VALUES (gen_random_uuid(), 'add_stream_units', now(), now());"""
+    )
 
     op.execute(
         """INSERT INTO roles VALUES (gen_random_uuid(), 'stream_units_owner', now(), now())"""
-    )
-    op.execute(
-        """INSERT INTO permissions VALUES (gen_random_uuid(), 'add_stream_units', now(), now());"""
     )
 
     op.execute(
