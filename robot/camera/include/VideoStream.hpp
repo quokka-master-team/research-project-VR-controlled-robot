@@ -6,6 +6,7 @@
 class VideoStream
 {
     std::string name;
+    bool isStreaming = false;
 
     std::unique_ptr<std::thread> streamThread;
     GstElement* pipeline = nullptr;

@@ -109,6 +109,12 @@ bool VideoStream::IsListening()
 
 void VideoStream::Start()
 {
+    if (isStreaming)
+    {
+        this->log.Warning(this->name + ": I'm already streaming!");
+        return;
+    }
+
     if (gst_element_set_state(pipeline, GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE)
     {
         throw std::runtime_error("Failed to start pipeline!");
@@ -118,10 +124,17 @@ void VideoStream::Start()
     this->streamThread = std::make_unique<std::thread>([this]() {
         g_main_loop_run(this->streamLoop);
     });
+    this->isStreaming = true;
 }
 
 void VideoStream::Stop()
 {
+    if (!this->isStreaming)
+    {
+        this->log.Warning(this->name + ": I wasn't streaming this time...");
+        return;
+    }
+
     if (this->streamLoop)
     {
         g_main_loop_quit(this->streamLoop);
@@ -131,6 +144,7 @@ void VideoStream::Stop()
     if (this->streamThread && this->streamThread->joinable()) {
         this->streamThread->join();
     }
+    this->isStreaming = false;
 }
 
 VideoStream::~VideoStream()
