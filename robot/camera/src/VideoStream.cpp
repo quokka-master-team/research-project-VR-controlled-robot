@@ -21,7 +21,15 @@ void VideoStream::HandleCommand(const std::string& command)
 
     if (command == "START")    this->Start();
     if (command == "STOP")     this->Stop();
-    if (command == "EXIT")     this->listenToClient.store(false);
+    if (command == "EXIT")
+    {
+        if (isStreaming)
+        {
+            this->Stop();
+        }
+
+        this->listenToClient.store(false);
+    }
 }
 
 void VideoStream::HandleRequest(std::shared_ptr<asio::ip::tcp::socket> socket)
@@ -149,15 +157,12 @@ void VideoStream::Stop()
 
 VideoStream::~VideoStream()
 {
-    this->listenToClient.store(false);
     this->clientContext.stop();
 
     if (this->clientListener.joinable())
     {
         this->clientListener.join();
     }
-
-    this->Stop();
 
     if (this->pipeline)
     {
