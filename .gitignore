@@ -48,4 +48,5 @@ venv/
 env/
 .mypy_cache/
 
-__pycache__/
+__pycache__
+backend/db/db_init.gz
