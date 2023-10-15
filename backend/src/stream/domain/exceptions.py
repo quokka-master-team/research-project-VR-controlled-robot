@@ -22,9 +22,17 @@ class InsufficientPermissionsToAddStreamUnit(StreamDomainException):
     pass
 
 
+class InsufficientPermissionsToStartTransmission(StreamDomainException):
+    pass
+
+
 class StreamUnitNotFound(StreamDomainException):
     pass
 
 
 class StreamUnitAlreadyExists(StreamDomainException):
+    pass
+
+
+class StreamUnitInUse(StreamDomainException):
     pass

@@ -1,5 +1,5 @@
 from fastapi import HTTPException, status
-from src.stream.api.errors import Errors
+from src.stream.api.messages import Errors
 
 STREAM_UNIT_NOT_FOUND = HTTPException(
     status.HTTP_404_NOT_FOUND, Errors.stream_unit_not_found

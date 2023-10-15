@@ -10,6 +10,7 @@ class Permissions(StrEnum):
 
     view_stream_units = auto()
     book_stream_unit = auto()
+    connect_to_stream_unit = auto()
 
 
 class Roles(StrEnum):

@@ -89,3 +89,5 @@ typing-extensions==4.8.0
     #   sqlalchemy
 uvicorn==0.23.2
     # via -r ./requirements/base.in
+websockets==11.0.3
+    # via -r ./requirements/base.in

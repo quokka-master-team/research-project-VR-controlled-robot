@@ -3,7 +3,7 @@ from src.auth.di import AuthModule
 from src.user_management.di import UserModule
 from src.stream.di import StreamModule
 
-all_modules = [CoreModule, UserModule, StreamModule, AuthModule]
+all_modules = [CoreModule, UserModule, AuthModule, StreamModule]
 
 
 __all__ = ["all_modules"]

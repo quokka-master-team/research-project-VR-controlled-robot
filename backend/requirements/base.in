@@ -11,3 +11,4 @@ authlib
 httpx
 itsdangerous
 pyjwt
+websockets

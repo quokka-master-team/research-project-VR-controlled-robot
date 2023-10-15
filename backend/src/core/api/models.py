@@ -1,4 +1,4 @@
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel
 from typing import Self, Any, get_type_hints
 
 
@@ -29,11 +29,6 @@ class EmptyResponse(ResponseModel):
 
 class ErrorMessage(BaseModel):
     message: str
-
-    @field_validator("message")
-    @classmethod
-    def replace_underscores_with_dashes(cls, value: str) -> str:
-        return value.replace("_", "-", value.count("_"))
 
 
 ErrorMessageResponse = {"model": ErrorMessage}
