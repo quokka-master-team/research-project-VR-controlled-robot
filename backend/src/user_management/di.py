@@ -1,10 +1,10 @@
 from src.di.module import Module
 from src.user_management.users.domain.ports import (
-    UserUnitOfWorkInterface,
+    UserUowInterface,
     UserServiceInterface,
 )
 from src.user_management.users.infrastructure.unit_of_work import (
-    UserUnitOfWork,
+    UserUow,
 )
 from src.user_management.users.application.services import UserService
 from src.core.infrastructure.database import SessionProvider
@@ -17,12 +17,12 @@ from src.user_management.permissions.application.adapters import (
 class UserModule(Module):
     @classmethod
     def bootstrap(cls) -> None:
-        cls.container[UserUnitOfWorkInterface] = UserUnitOfWork(
+        cls.container[UserUowInterface] = UserUow(
             cls.container[SessionProvider]
         )
         cls.container[UserServiceInterface] = UserService(
-            cls.container[UserUnitOfWorkInterface]
+            cls.container[UserUowInterface]  # type: ignore
         )
         cls.container[PermissionValidator] = UserPermissionValidator(
-            cls.container[SessionProvider]
+            cls.container[SessionProvider]  # type: ignore
         )

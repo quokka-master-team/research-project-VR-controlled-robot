@@ -1,4 +1,4 @@
-from pydantic import BaseSettings
+from pydantic_settings import BaseSettings
 import os
 
 
@@ -6,11 +6,12 @@ class Settings(BaseSettings):
     APP_NAME: str = "Vr-controlled-robot"
     APP_SECRET: str = os.environ.get("APP_SECRET_KEY", "super-secret")
     PROJECT_ROOT: str = os.path.abspath((os.path.dirname(__name__)))
-    URL_PREFIX_FORMAT: str = "/api/{prefix}"
-    ROUTERS: list[tuple[str, str]] = [
-        ("src.auth.api", "auth"),
-        ("src.user_management.api", "users"),
-    ]  # module, prefix
+    URL_PREFIX: str = "/api"
+    ROUTERS: list[str] = [
+        "src.auth.api",
+        "src.user_management.api",
+        "src.stream.api.router",
+    ]
 
     SQLALCHEMY_DB_URI: str = (
         "postgresql://{user}:{password}@{host}:{port}/{db}".format(

@@ -42,6 +42,8 @@ build-app:
 run-app:
     {{DOCKER_COMPOSE}} up
 
+build-and-run: build-app run-app
+
 setup: && install-local build-app upgrade-db run-app
     if ! {{path_exists(VENV_DIR)}}; then just create-venv; fi
 
@@ -57,10 +59,12 @@ app-bash:
     {{DOCKER_COMPOSE}} exec -it api bash
 
 migrate-db message:
+    {{DOCKER_COMPOSE}} run --rm api wait-for-it db:5432
     {{DOCKER_COMPOSE}} run --rm api alembic revision --autogenerate -m '{{message}}'
-    @echo "$({{DOCKER_COMPOSE}} run --rm api alembic history)" | sed -E 's/<base> -> ([a-f0-9]+) \(head\), (.*)/\1 \2/' > {{CURRENT_MIGRATION}}
+    @echo "$({{DOCKER_COMPOSE}} run --rm api alembic history)" | sed -n '1p' | sed -e 's/-> //' -e 's/ (head)//' > {{CURRENT_MIGRATION}}
 
 upgrade-db:
+    {{DOCKER_COMPOSE}} run --rm api wait-for-it db:5432
     {{DOCKER_COMPOSE}} run --rm api alembic upgrade head
 
 remove-containers:
