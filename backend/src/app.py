@@ -87,7 +87,5 @@ def configure_handlers(app: FastAPI) -> None:
     ) -> JSONResponse:
         return JSONResponse(
             status_code=exc.status_code,
-            content=jsonable_encoder(
-                ErrorMessage(message=exc.detail)
-            ),
+            content=jsonable_encoder(ErrorMessage(message=exc.detail)),
         )

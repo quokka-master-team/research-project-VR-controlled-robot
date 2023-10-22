@@ -1,10 +1,11 @@
 from uuid import UUID
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, WebSocket
 from typing import Annotated
 
 from src.stream.domain.ports import (
     StreamUnitCommandServiceInterface,
     StreamUnitQueryServiceInterface,
+    StreamingServiceInterface,
     Actor,
 )
 from src.stream.api.models import PostStreamUnit, StreamUnit
@@ -135,3 +136,16 @@ async def get_stream_unit(
         raise FORBIDDEN
     except StreamUnitNotFound:
         raise STREAM_UNIT_NOT_FOUND
+
+
+@router.websocket("/transmission/{stream_unit_id}")
+async def streaming(
+    stream_unit_id: UUID,
+    token: str,
+    websocket: WebSocket,
+    streaming_service: Annotated[
+        StreamingServiceInterface,
+        Depends(lambda: di[StreamingServiceInterface]),
+    ],
+) -> None:
+    await streaming_service.start(token, stream_unit_id, websocket)
