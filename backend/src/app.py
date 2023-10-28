@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from authlib.integrations.starlette_client import OAuth
 from starlette.middleware.sessions import SessionMiddleware
 from src.core.utils import import_from
@@ -78,6 +79,13 @@ def configure_extensions(settings: Settings) -> None:
 
 def configure_middleware(app: FastAPI, settings: Settings) -> None:
     app.add_middleware(SessionMiddleware, secret_key=settings.APP_SECRET)
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 
 def configure_handlers(app: FastAPI) -> None:
