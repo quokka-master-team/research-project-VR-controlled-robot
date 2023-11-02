@@ -1,7 +1,7 @@
 ---
-- name: Playbook which runs base configuration on NUC server
+- name: Playbook which runs some configuration of server
   gather_facts: no
-  hosts: ovh_server
+  hosts: all
   roles:
     - name: os_config
       vars: 
@@ -16,3 +16,5 @@
           - resolvconf
 
     - name: wireguard
+      become: yes
+

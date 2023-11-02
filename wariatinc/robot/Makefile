@@ -3,7 +3,7 @@ API_TOKEN="2WcPd9AcWXROqQpB4ie1iFIPFc7_AzAQNJAEkU32RFDXMEBE"
 API_URL="https://api.ngrok.com/tunnels"
 SSH_USER="robot"
 SSH_KEY_FILE="~/.ssh/id_rsa"
-SUDO_PASS="bot"
+SUDO_PASS=""
 
 create_hostini:
 	@echo "1. Creating hosts.ini file"
