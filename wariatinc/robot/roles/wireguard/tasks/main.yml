@@ -74,7 +74,7 @@
 - name: Wireguard - set client config file
   become: yes
   ansible.builtin.template:
-    dest: /etc/wireguard/client_wg0.conf.j2
+    dest: /etc/wireguard/wg0.conf
     src: client_wg0.conf.j2
     owner: root
     group: root
@@ -82,8 +82,10 @@
   tags:
     - wireguard_client
 
-# - name: Wireguard - setup client
-  
-#   tags:
-#     - wireguard_client
-
+- name: Start wireguard and enable on boot
+  ansible.builtin.systemd:
+    name: wg-quick@wg0
+    state: started
+    enabled: yes
+  tags:
+    - wireguard_client
