@@ -1,0 +1,82 @@
+- name: Check if the file with keys exists
+  become: yes
+  ansible.builtin.stat:
+    path: "{{ private_key_path }}private.key"
+  register: file_info
+  tags:
+  - wireguard
+
+- name: "Adding keys: private and public to host"
+  ansible.builtin.shell: |
+    wg genkey | sudo tee {{ private_key_path }} > /dev/null
+    wg pubkey | sudo tee {{ public_key_path }} > /dev/null
+  become: yes
+  tags:
+    - wireguard
+  when: not file_info.stat.exists
+
+- name: "Reading keys: private and public from host"
+  become: yes
+  ansible.builtin.set_fact:
+    private_key: "{{ lookup('file', private_key_path) }}"
+    # public_key: "{{ lookup('file', public_key_path) }}"
+  tags:
+    - wireguard
+
+- name: Wireguard - set server config file
+  become: yes
+  ansible.builtin.template:
+    dest: /etc/wireguard/wg0.conf.j2
+    src: server_wg0.conf.j2
+    owner: root
+    group: root
+    mode: '0600'
+  tags:
+    - wireguard_server
+
+- name: Enable and persist ip forwarding
+  ansible.posix.sysctl:
+    name: net.ipv4.ip_forward
+    value: "1"
+    state: present
+    sysctl_set: yes
+    reload: yes
+  tags:
+    - wireguard_server
+
+- name: Allow all access to udp port 51820
+  community.general.ufw:
+    rule: allow
+    port: '51820'
+    proto: udp
+  tags:
+    - wireguard_server
+
+
+- name: Start wireguard and enable on boot
+  ansible.builtin.systemd:
+    name: wg-quick@wg0
+    state: started
+    enabled: yes
+  tags:
+    - wireguard_server
+  notify:
+    - register_wireguard_status
+    - show_wireguard_status
+
+- name: Wireguard - set client config file
+  become: yes
+  ansible.builtin.template:
+    dest: /etc/wireguard/client_wg0.conf.j2
+    src: client_wg0.conf.j2
+    owner: root
+    group: root
+    mode: '0600'
+  tags:
+    - wireguard_client
+
+# - name: Wireguard - setup client
+  
+#   tags:
+#     - wireguard_client
+
