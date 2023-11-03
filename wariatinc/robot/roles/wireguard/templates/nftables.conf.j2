@@ -1,0 +1,66 @@
+#!/usr/sbin/nft -f
+flush ruleset
+
+define pub_iface = {{ public_iface }}
+define wg_iface = {{ wireguard_iface }}
+define wg_port = 51820
+
+table inet filter {
+    chain input {
+        type filter hook input priority 0; policy drop;
+
+        # accept all loopback packets
+        iif "lo" accept
+        # accept all icmp/icmpv6 packets
+        meta l4proto { icmp, ipv6-icmp } accept
+        # accept all packets that are part of an already-established connection
+        ct state vmap { invalid : drop, established : accept, related : accept }
+        # drop new connections over rate limit
+        ct state new limit rate over 1/second burst 10 packets drop
+
+        # accept all DHCPv6 packets received at a link-local address
+        ip6 daddr fe80::/64 udp dport dhcpv6-client accept
+        # accept all SSH packets received on a public interface
+        iifname $pub_iface tcp dport ssh accept
+        # accept all WireGuard packets received on a public interface
+        iifname $pub_iface udp dport $wg_port accept
+        
+        ###############################################
+        # TO MUSI BYĆ - można dodać inne protokoly
+        ###############################################
+        iifname $pub_iface tcp dport http accept
+        iifname $pub_iface udp dport http accept
+        # reject with polite "port unreachable" icmp response
+        reject
+    }
+
+    chain forward {
+        type filter hook forward priority 0; policy drop;
+
+        # forward all packets that are part of an already-established connection
+        ct state vmap { invalid : drop, established : accept, related : accept }
+        # forward any incoming packets from a public interface that will go out through WireGuard
+        iifname $pub_iface oifname $wg_iface accept
+
+        # reject with polite "host unreachable" icmp response
+        reject with icmpx type host-unreachable
+    }
+}
+table inet nat {
+    chain prerouting {
+        type nat hook prerouting priority -100; policy accept;
+        ###############################################
+        # TU ROBIONY JEST PORTFORWARDING
+        ###############################################
+        # rewrite destination address of TCP port 2000 packets to port 8080 on {{ wireguard_peer_ipv4 }}
+        {% for item in forwarded_ports %}
+        iifname $pub_iface {{ item.protocol }} dport {{ item.from_port }} dnat ip to {{ wireguard_peer_ipv4 }}:{{ item.to_port }}
+        {% endfor %}
+        # iifname $pub_iface tcp dport 2000 dnat ip to {{ wireguard_peer_ipv4 }}:8080  # przyklad
+    }
+    chain postrouting {
+        type nat hook postrouting priority 100; policy accept;
+        # masquerade all packets going out through WireGuard
+        oifname $wg_iface masquerade
+    }
+}

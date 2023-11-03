@@ -14,7 +14,8 @@
           - tree
           - wireguard
           - resolvconf
-
+          - traceroute
+          - nftables
     - name: wireguard
       become: yes
 

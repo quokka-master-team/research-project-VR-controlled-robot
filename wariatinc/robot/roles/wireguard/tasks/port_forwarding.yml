@@ -1,0 +1,65 @@
+- name: Start nfttables and enable on boot
+  ansible.builtin.systemd:
+    name: nftables
+    state: started
+    enabled: yes
+  tags:
+    - wireguard_server
+    - nft
+
+- name: Set nftables.conf file
+  ansible.builtin.template:
+    dest: /etc/nftables.conf
+    src: nftables.conf.j2
+    owner: root
+    group: root
+    mode: '0600'
+  tags:
+    - nft
+
+- name: Restart nftables service on client host
+  ansible.builtin.systemd:
+    name: nftables
+    state: restarted
+  tags:
+    - nft
+
+- name: Start ufw and enable on boot
+  ansible.builtin.systemd:
+    name: ufw
+    state: started
+    enabled: yes
+  tags:
+    - ufw
+
+- name: UFW open ports
+  community.general.ufw:
+    rule: allow
+    port: "{{ item.from_port }}"
+    proto: "{{ item.protocol }}"
+  with_items: "{{ forwarded_ports }}"
+  tags:
+    - ufw
+
+- name: Allow routing using ufw route
+  community.general.ufw:
+    rule: allow
+    route: true
+    interface_in: "{{ public_iface }}"
+    interface_out: "{{ wireguard_iface }}"
+    to_ip: "{{ wireguard_peer_ipv4 }}"
+    port: 8080
+    proto: "{{ item }}"
+  with_items:
+    - tcp
+    - udp
+  tags:
+    - ufw
+
+- name: Start ufw and enable on boot
+  ansible.builtin.systemd:
+    name: ufw
+    state: restarted
+  tags:
+    - ufw
+

@@ -34,7 +34,7 @@
 
 - name: Wireguard - set server config file
   ansible.builtin.template:
-    dest: /etc/wireguard/wg0.conf
+    dest: "/etc/wireguard/{{ wireguard_iface }}.conf"
     src: server_wg0.conf.j2
     owner: root
     group: root
@@ -62,7 +62,7 @@
 
 - name: Start wireguard and enable on boot
   ansible.builtin.systemd:
-    name: wg-quick@wg0
+    name: "wg-quick@{{ wireguard_iface }}"
     state: started
     enabled: yes
   tags:
@@ -74,7 +74,7 @@
 - name: Wireguard - set client config file
   become: yes
   ansible.builtin.template:
-    dest: /etc/wireguard/wg0.conf
+    dest: "/etc/wireguard/{{ wireguard_iface }}.conf"
     src: client_wg0.conf.j2
     owner: root
     group: root
@@ -82,10 +82,17 @@
   tags:
     - wireguard_client
 
-- name: Start wireguard and enable on boot
+- name: Restart WireGuard service on client host
   ansible.builtin.systemd:
-    name: wg-quick@wg0
-    state: started
-    enabled: yes
+    name: "wg-quick@{{ wireguard_iface }}"
+    state: restarted
   tags:
     - wireguard_client
+
+
+- name: Include task list in play
+  ansible.builtin.include_tasks: port_forwarding.yml
+  tags:
+    - ufw
+    - nft
+    - wireguard_server
