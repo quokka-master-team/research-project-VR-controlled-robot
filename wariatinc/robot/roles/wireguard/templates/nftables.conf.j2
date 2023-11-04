@@ -54,7 +54,7 @@ table inet nat {
         ###############################################
         # rewrite destination address of TCP port 2000 packets to port 8080 on {{ wireguard_peer_ipv4 }}
         {% for item in forwarded_ports %}
-        iifname $pub_iface {{ item.protocol }} dport {{ item.from_port }} dnat ip to {{ wireguard_peer_ipv4 }}:{{ item.to_port }}
+        iifname $pub_iface {{ item.protocol }} dport {{ item.vpn_server_port }} dnat ip to {{ wireguard_peer_ipv4 }}:{{ item.peer_port }}
         {% endfor %}
         # iifname $pub_iface tcp dport 2000 dnat ip to {{ wireguard_peer_ipv4 }}:8080  # przyklad
     }

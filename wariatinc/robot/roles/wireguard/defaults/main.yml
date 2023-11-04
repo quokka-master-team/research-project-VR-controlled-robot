@@ -5,15 +5,18 @@ wireguard_iface: wg0
 
 
 forwarded_ports:
-  - protocol: udp
-    from_port: 50001
-    to_port: 8080
-  - protocol: udp
-    from_port: 50002
-    to_port: 8080
+  # - protocol: udp
+  #   vpn_server_port: 50001
+  #   peer_port: 8080
+  # - protocol: udp
+  #   vpn_server_port: 50002
+  #   peer_port: 8080
+  # - protocol: tcp
+  #   vpn_server_port: 60001
+  #   peer_port: 8080
   - protocol: tcp
-    from_port: 60001
-    to_port: 8080
+    vpn_server_port: 60002
+    peer_port: 8080
   - protocol: tcp
-    from_port: 60002
-    to_port: 8080
+    vpn_server_port: 60003
+    peer_port: 22
