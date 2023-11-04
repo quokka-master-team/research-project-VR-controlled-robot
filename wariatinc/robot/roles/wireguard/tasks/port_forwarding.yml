@@ -1,62 +1,72 @@
 - name: Start nfttables and enable on boot
+  ignore_errors: yes
   ansible.builtin.systemd:
     name: nftables
     state: started
     enabled: yes
   tags:
     - wireguard_server
-    - nft
 
 - name: Set nftables.conf file
   ansible.builtin.template:
     dest: /etc/nftables.conf
-    src: nftables.conf.j2
+    src: nftables_server.conf.j2
     owner: root
     group: root
     mode: '0600'
   tags:
+    - wireguard_server
     - nft
+
+- name: Stop & disable ufw
+  ansible.builtin.systemd:
+    name: ufw
+    state: stopped
+    enabled: no
+  tags:
+    - wireguard_server
 
 - name: Restart nftables service on client host
   ansible.builtin.systemd:
     name: nftables
     state: restarted
   tags:
+    - wireguard_server
     - nft
 
-- name: Start ufw and enable on boot
-  ansible.builtin.systemd:
-    name: ufw
-    state: started
-    enabled: yes
-  tags:
-    - ufw
+# - name: Start ufw and enable on boot
+#   ansible.builtin.systemd:
+#     name: ufw
+#     state: started
+#     enabled: yes
+#   tags:
+#     - ufw
 
-- name: UFW open ports
-  community.general.ufw:
-    rule: allow
-    port: "{{ item.vpn_server_port }}"
-    proto: "{{ item.protocol }}"
-  with_items: "{{ forwarded_ports }}"
-  tags:
-    - ufw
+# - name: UFW open ports
+#   community.general.ufw:
+#     rule: allow
+#     port: "{{ item.vpn_server_port }}"
+#     proto: "{{ item.protocol }}"
+#   with_items: "{{ forwarded_ports }}"
+#   tags:
+#     - ufw
 
-- name: Allow routing using ufw route
-  community.general.ufw:
-    rule: allow
-    route: true
-    interface_in: "{{ public_iface }}"
-    interface_out: "{{ wireguard_iface }}"
-    to_ip: "{{ wireguard_peer_ipv4 }}"
-    port: "{{ item.peer_port }}"
-    proto: "{{ item.protocol }}"
-  with_items: "{{ forwarded_ports }}"
-  tags:
-    - ufw
+# - name: Allow routing using ufw route
+#   community.general.ufw:
+#     rule: allow
+#     route: true
+#     interface_in: "{{ public_iface }}"
+#     interface_out: "{{ wireguard_iface }}"
+#     to_ip: "{{ wireguard_peer_ipv4 }}"
+#     port: "{{ item.peer_port }}"
+#     proto: "{{ item.protocol }}"
+#   with_items: "{{ forwarded_ports }}"
+#   tags:
+#     - ufw
 
-- name: Start ufw and enable on boot
-  ansible.builtin.systemd:
-    name: ufw
-    state: restarted
-  tags:
-    - ufw
+# - name: Start ufw and enable on boot
+#   ansible.builtin.systemd:
+#     name: ufw
+#     state: restarted
+#   tags:
+#     - ufw

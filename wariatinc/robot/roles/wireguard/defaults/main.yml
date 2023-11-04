@@ -5,18 +5,21 @@ wireguard_iface: wg0
 
 
 forwarded_ports:
-  # - protocol: udp
-  #   vpn_server_port: 50001
-  #   peer_port: 8080
-  # - protocol: udp
-  #   vpn_server_port: 50002
-  #   peer_port: 8080
-  # - protocol: tcp
-  #   vpn_server_port: 60001
-  #   peer_port: 8080
+  - protocol: tcp
+    vpn_server_port: 50011
+    peer_port: 5011
+  - protocol: tcp
+    vpn_server_port: 50012
+    peer_port: 5012
+  - protocol: tcp
+    vpn_server_port: 60001
+    peer_port: 8080
   - protocol: tcp
     vpn_server_port: 60002
     peer_port: 8080
-  - protocol: tcp
-    vpn_server_port: 60003
+  - protocol: tcp  # do polaczenia po ssh z nuc
+    vpn_server_port: 1024
     peer_port: 22
+  - protocol: tcp  # do polaczenia po xrdp z nuc
+    vpn_server_port: 3389
+    peer_port: 3389

@@ -93,6 +93,5 @@
 - name: Include task list in play
   ansible.builtin.include_tasks: port_forwarding.yml
   tags:
-    - ufw
     - nft
     - wireguard_server

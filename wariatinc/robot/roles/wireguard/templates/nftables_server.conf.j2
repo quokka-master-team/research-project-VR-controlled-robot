@@ -24,14 +24,15 @@ table inet filter {
         iifname $pub_iface tcp dport ssh accept
         # accept all WireGuard packets received on a public interface
         iifname $pub_iface udp dport $wg_port accept
-        
-        ###############################################
-        # TO MUSI BYĆ - można dodać inne protokoly
-        ###############################################
-        iifname $pub_iface tcp dport http accept
-        iifname $pub_iface udp dport http accept
         # reject with polite "port unreachable" icmp response
+
+        # akceptowanie polaczen na serwer OVH - lokalnie
+        iifname $pub_iface tcp dport {http, https} counter accept
+
         reject
+    }
+    chain output {
+        type filter hook output priority 0; policy accept;
     }
 
     chain forward {
@@ -52,11 +53,10 @@ table inet nat {
         ###############################################
         # TU ROBIONY JEST PORTFORWARDING
         ###############################################
-        # rewrite destination address of TCP port 2000 packets to port 8080 on {{ wireguard_peer_ipv4 }}
+        iifname $pub_iface tcp dport 8080 redirect to 80
         {% for item in forwarded_ports %}
         iifname $pub_iface {{ item.protocol }} dport {{ item.vpn_server_port }} dnat ip to {{ wireguard_peer_ipv4 }}:{{ item.peer_port }}
         {% endfor %}
-        # iifname $pub_iface tcp dport 2000 dnat ip to {{ wireguard_peer_ipv4 }}:8080  # przyklad
     }
     chain postrouting {
         type nat hook postrouting priority 100; policy accept;
