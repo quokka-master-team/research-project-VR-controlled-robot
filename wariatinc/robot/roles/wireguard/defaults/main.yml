@@ -12,14 +12,17 @@ forwarded_ports:
     vpn_server_port: 50012
     peer_port: 5012
   - protocol: tcp
-    vpn_server_port: 60001
-    peer_port: 8080
+    vpn_server_port: 50013
+    peer_port: 5013
   - protocol: tcp
-    vpn_server_port: 60002
-    peer_port: 8080
+    vpn_server_port: 50014
+    peer_port: 5014
+  - protocol: udp  # do ogladania stream z socket
+    vpn_server_port: 9000
+    peer_port: 1234
   - protocol: tcp  # do polaczenia po ssh z nuc
     vpn_server_port: 1024
     peer_port: 22
   - protocol: tcp  # do polaczenia po xrdp z nuc
-    vpn_server_port: 3389
+    vpn_server_port: 3390
     peer_port: 3389

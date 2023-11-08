@@ -10,6 +10,8 @@
             state: present
           - name: jkoniuszewski
             state: present
+          - name: devuser
+            state: present
         packages:
           - tree
           - wireguard

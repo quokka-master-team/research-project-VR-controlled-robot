@@ -28,8 +28,10 @@ table inet filter {
 
         # akceptowanie polaczen na serwer OVH - lokalnie
         iifname $pub_iface tcp dport {http, https} counter accept
+        iifname $wg_iface udp dport 1234 counter accept
+        iifname $pub_iface tcp dport 3389 counter accept
 
-        reject
+        # reject
     }
     chain output {
         type filter hook output priority 0; policy accept;
@@ -53,7 +55,6 @@ table inet nat {
         ###############################################
         # TU ROBIONY JEST PORTFORWARDING
         ###############################################
-        iifname $pub_iface tcp dport 8080 redirect to 80
         {% for item in forwarded_ports %}
         iifname $pub_iface {{ item.protocol }} dport {{ item.vpn_server_port }} dnat ip to {{ wireguard_peer_ipv4 }}:{{ item.peer_port }}
         {% endfor %}
