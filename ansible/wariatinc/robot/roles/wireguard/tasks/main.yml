@@ -1,0 +1,97 @@
+- name: Check if the file with keys exists
+  ansible.builtin.stat:
+    path: "{{ private_key_path }}"
+  register: file_info
+  tags:
+    - wireguard
+
+- name: Ensure WireGuard directory exists
+  become: yes
+  ansible.builtin.file:
+    path: "{{ private_key_path | dirname }}"
+    state: directory
+  tags:
+    - wireguard
+  when: not file_info.stat.exists
+
+- name: Execute WireGuard setup script
+  shell: "{{ lookup('template', 'generate_keys.sh.j2') }}"
+  tags:
+    - wireguard
+  when: not file_info.stat.exists
+
+- name: "Read private key from host"
+  ansible.builtin.command: "cat {{ private_key_path }}"
+  register: key
+  tags:
+    - wireguard
+
+- name: "Save in private key from host"
+  ansible.builtin.set_fact:
+    private_key: "{{ key.stdout }}"
+  tags:
+    - wireguard
+
+- name: Wireguard - set server config file
+  ansible.builtin.template:
+    dest: "/etc/wireguard/{{ wireguard_iface }}.conf"
+    src: server_wg0.conf.j2
+    owner: root
+    group: root
+    mode: '0600'
+  tags:
+    - wireguard_server
+
+- name: Enable and persist ip forwarding
+  ansible.posix.sysctl:
+    name: net.ipv4.ip_forward
+    value: "1"
+    state: present
+    sysctl_set: yes
+    reload: yes
+  tags:
+    - wireguard_server
+
+- name: Allow all access to udp port 51820
+  community.general.ufw:
+    rule: allow
+    port: '51820'
+    proto: udp
+  tags:
+    - wireguard_server
+
+- name: Start wireguard and enable on boot
+  ansible.builtin.systemd:
+    name: "wg-quick@{{ wireguard_iface }}"
+    state: started
+    enabled: yes
+  tags:
+    - wireguard_server
+  # notify:
+  #   - register_wireguard_status
+  #   - show_wireguard_status
+
+- name: Wireguard - set client config file
+  become: yes
+  ansible.builtin.template:
+    dest: "/etc/wireguard/{{ wireguard_iface }}.conf"
+    src: client_wg0.conf.j2
+    owner: root
+    group: root
+    mode: '0600'
+  tags:
+    - wireguard_client
+
+- name: Restart WireGuard service on client host
+  ansible.builtin.systemd:
+    name: "wg-quick@{{ wireguard_iface }}"
+    state: restarted
+  tags:
+    - wireguard_client
+
+
+- name: Include task list in play
+  ansible.builtin.include_tasks: port_forwarding.yml
+  tags:
+    - nft
+    - wireguard_server

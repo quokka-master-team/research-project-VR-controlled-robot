@@ -1,0 +1,10 @@
+- name: register_wireguard_status
+  command: wg show "{{ wireguard_iface }}"
+  register: wireguard_status
+  ignore_errors: yes
+  changed_when: false
+
+- name: show_wireguard_status
+  debug:
+    var: wireguard_status.stdout
+  when: wireguard_status.rc == 0

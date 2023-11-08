@@ -1,0 +1,69 @@
+---
+- name: Install packages
+  become: yes
+  ansible.builtin.package:
+      name: "{{ item }}"
+  loop: "{{ packages }}"
+  when: packages is defined
+  tags:
+    - packages
+
+- name: Create groups & users
+  become: yes
+  block:
+    - name: Create base group for user
+      ansible.builtin.group:
+        state: "{{ item.state }}"
+        name: "{{ item.name }}"
+      loop: "{{ users }}"
+
+    - name: Add users
+      ansible.builtin.user:
+        state: "{{ item.state }}"
+        name: "{{ item.name }}"
+        shell: /bin/bash
+        create_home: yes
+        password: "{{ item.name | password_hash('sha512', 'mysecretsalt') }}"
+        groups: 
+          - adm
+          - sudo
+          - "{{ item.name }}"
+      loop: "{{ users }}"
+
+  when: users is defined
+  tags:
+    - users
+
+- name: Template .bashrc file
+  become: yes
+  ansible.builtin.template:
+    src: .bashrc  # Path to your Jinja2 template file
+    dest: /root/.bashrc
+  notify:
+    - Reload Bash
+  tags:
+    - bashrc
+
+- name: Add authorized_keys file
+  block:
+    - name: Ensure the .ssh directory exists
+      ansible.builtin.file:
+        path: /home/ubuntu/.ssh
+        state: directory
+        owner: "{{ remote_user }}"
+        group: "{{ remote_user }}"
+        mode: '0700'
+      become_user: root
+
+    - name: Copy SSH keys to authorized_keys file
+      ansible.builtin.copy:
+        content: "{{ item }}"
+        dest: /home/ubuntu/.ssh/authorized_keys
+        owner: "{{ remote_user }}" 
+        group: "{{ remote_user }}"
+        mode: '0600'
+      with_items: "{{ ssh_public_keys }}"  
+  when: ssh_public_keys | length > 0
+  tags:
+    - ssh
+

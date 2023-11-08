@@ -1,0 +1,19 @@
+[Interface]
+# The address your computer will use on the VPN
+PrivateKey = {{ private_key }}
+Address = {{ wireguard_peer_ipv4 }}/32
+
+# Also ping the vpn server to ensure the tunnel is initialized
+PostUp = ping -c1 {{ wireguard_server_ipv4 }}
+
+[Peer]
+# VPN server's wireguard public key
+PublicKey = {{ wireguard_server_pubkey }}
+
+# Public IP address of your VPN server (USE YOURS!)
+# Use the floating IP address if you created one for your VPN server
+Endpoint = {{ ovh_domanain_address }}:51820
+
+# 10.0.0.0/24 is the VPN subnet
+AllowedIPs = {{ wireguard_server_ipv4 }}/24
+PersistentKeepalive = 25

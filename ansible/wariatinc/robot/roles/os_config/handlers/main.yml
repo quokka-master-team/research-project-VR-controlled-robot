@@ -1,0 +1,3 @@
+- name: Reload Bash
+  become: yes
+  ansible.builtin.command: "source /root/.bashrc"

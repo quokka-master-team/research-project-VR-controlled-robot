@@ -1,0 +1,10 @@
+# {{ ansible_managed }}
+[Interface]
+Address = {{ wireguard_server_ipv4 }}/24
+ListenPort = 51820
+SaveConfig = true
+PrivateKey = {{ private_key }}
+
+[Peer]
+PublicKey = {{ wireguard_peer_pubkey }}
+AllowedIPs = {{ wireguard_peer_ipv4 }}
