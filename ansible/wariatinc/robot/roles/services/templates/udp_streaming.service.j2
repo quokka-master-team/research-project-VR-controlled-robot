@@ -1,0 +1,20 @@
+[Unit]
+Description="UDP video feed streaming server"
+After=network.target
+
+[Service]
+User=root
+Group=root
+WorkingDirectory={{ streaming_server_dir }}/env/
+Environment=PATH={{ streaming_server_dir }}/env/bin
+ExecStart=/usr/bin/bash -c 'cd {{ streaming_server_dir }}/env/ && source {{ streaming_server_dir }}/env/bin/activate && python {{ streaming_server_dir }}/server.py'
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=process
+IgnoreSIGPIPE=true
+Restart=always
+RestartSec=3
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

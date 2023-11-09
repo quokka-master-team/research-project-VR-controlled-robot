@@ -1,0 +1,64 @@
+---
+
+- name: "Download ngrok"
+  ansible.builtin.get_url:
+    url: "{{ ngrok_download_url }}"
+    dest: "/opt/ngrok-v3-stable-linux-amd64.tgz"
+    mode: '0644'
+  tags:
+    - ngrok
+
+- name: "Make sure that '/usr/local/bin' dir exists"
+  ansible.builtin.file:
+    path: "/usr/local/bin"
+    state: directory
+  tags:
+    - ngrok
+
+- name: "Unarchive ngrok"
+  ansible.builtin.unarchive:
+    src: "/opt/ngrok-v3-stable-linux-amd64.tgz"
+    dest: "/usr/local/bin"
+    remote_src: yes
+  tags:
+    - ngrok
+
+- name: "Add ngrok authtoken"
+  ansible.builtin.shell: "ngrok config add-authtoken {{ ngrok_authtoken }}"
+  tags:
+    - ngrok
+
+
+- name: "Set up ngrok config file"
+  ansible.builtin.template:
+    dest: "{{ ngrok_config_dir }}/ngrok.yml"
+    src: "ngrok.yml.j2"
+    owner: root
+    group: root
+    mode: '0644'
+  tags:
+    - ngrok
+
+- name: "Set up ngrok service"
+  ansible.builtin.template:
+    dest: "{{ systemd_dir }}/ngrok.service"
+    src: "ngrok.service.j2"
+    owner: root
+    group: root
+    mode: '0644'
+  tags:
+    - ngrok
+
+- name: "Force systemd to reread configs"
+  ansible.builtin.systemd:
+    daemon_reload: true
+  tags:
+    - ngrok
+
+- name: "Enable and start the service"
+  ansible.builtin.systemd:
+    name: ngrok.service
+    state: started
+    enabled: true
+  tags:
+    - ngrok

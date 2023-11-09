@@ -20,4 +20,5 @@
           - nftables
     - name: wireguard
       become: yes
-
+    - name: services
+      become: yes

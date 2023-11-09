@@ -1,0 +1,7 @@
+---
+
+systemd_dir: "/etc/systemd/system"
+streaming_server_dir: "/home/robot/Desktop/research-project-VR-controlled-robot/robot/streaming_server"
+ngrok_download_url: "https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz"
+ngrok_config_dir: "/root/.config/ngrok"
+ngrok_authtoken: "2OKHrtmgzsMcrJmDAwcPfHpKceB_4nqcv2YGP1b6BDGex3LQ3"
