@@ -15,9 +15,8 @@ table inet filter {
         meta l4proto { icmp, ipv6-icmp } accept
         # accept all packets that are part of an already-established connection
         ct state vmap { invalid : drop, established : accept, related : accept }
-        # drop new connections over rate limit
-        ct state new limit rate over 1/second burst 10 packets drop
-
+        # drop new connections over rate limit, protect before DDOS attack
+        ct state new limit rate over 100/second burst 10 packets drop
         # accept all DHCPv6 packets received at a link-local address
         ip6 daddr fe80::/64 udp dport dhcpv6-client accept
         # accept all SSH packets received on a public interface
@@ -27,11 +26,8 @@ table inet filter {
         # reject with polite "port unreachable" icmp response
 
         # akceptowanie polaczen na serwer OVH - lokalnie
-        iifname $pub_iface tcp dport {http, https} counter accept
-        iifname $wg_iface udp dport 1234 counter accept
-        iifname $pub_iface tcp dport 3389 counter accept
-
-        # reject
+        iifname $pub_iface tcp dport {http, https, 3389} counter accept
+        reject
     }
     chain output {
         type filter hook output priority 0; policy accept;
@@ -43,7 +39,11 @@ table inet filter {
         # forward all packets that are part of an already-established connection
         ct state vmap { invalid : drop, established : accept, related : accept }
         # forward any incoming packets from a public interface that will go out through WireGuard
-        iifname $pub_iface oifname $wg_iface accept
+        # iifname $pub_iface oifname $wg_iface accept
+        iifname $wg_iface oifname $pub_iface accept
+
+        iifname $pub_iface tcp dport { {{ tcp_peer_ports }} } accept
+        iifname $pub_iface udp dport { {{ udp_peer_ports }} } accept
 
         # reject with polite "host unreachable" icmp response
         reject with icmpx type host-unreachable
