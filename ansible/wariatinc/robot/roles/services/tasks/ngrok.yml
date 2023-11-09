@@ -28,7 +28,6 @@
   tags:
     - ngrok
 
-
 - name: "Set up ngrok config file"
   ansible.builtin.template:
     dest: "{{ ngrok_config_dir }}/ngrok.yml"
