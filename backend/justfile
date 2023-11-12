@@ -46,13 +46,13 @@ run-app:
 
 build-and-run: build-app run-app
 
-setup: && install-local build-app init_db upgrade-db run-app
+setup: && install-local build-app init-db upgrade-db run-app
     if ! {{path_exists(VENV_DIR)}}; then just create-venv; fi
 
 psql:
     {{DOCKER_COMPOSE}} run --rm api psql --host=$POSTGRES_HOST --dbname=$POSTGRES_DB --username=$POSTGRES_USER
 
-init_db:
+init-db:
     {{DOCKER_COMPOSE}} run --rm api wait-for-it db:5432
     {{DOCKER_COMPOSE}} run --rm api pg_restore --host=$POSTGRES_HOST --dbname=$POSTGRES_DB --username=$POSTGRES_USER --format=custom {{INIT_DB_FILE}}
 

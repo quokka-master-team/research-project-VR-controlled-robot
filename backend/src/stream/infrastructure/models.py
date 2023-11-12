@@ -10,7 +10,7 @@ class StreamUnit(Model):
     __table_args__ = (
         sqla.PrimaryKeyConstraint("id", name="stream_unit_pkey"),
         sqla.UniqueConstraint("name", name="stream_unit_name_uniq"),
-        sqla.UniqueConstraint("video_url", name="stream_unit_video_uri_uniq"),
+        sqla.UniqueConstraint("host", "port", name="stream_unit_host_port_uniq"),
         sqla.UniqueConstraint("api_url", name="stream_unit_api_uri_uniq"),
     )
 
@@ -28,7 +28,7 @@ class StreamUnit(Model):
     )
 
     secret: orm.Mapped[str] = orm.mapped_column(sqla.String(), nullable=True)
-    video_url: orm.Mapped[str] = orm.mapped_column(
-        sqla.String(), nullable=False
-    )
-    api_url: orm.Mapped[str] = orm.mapped_column(sqla.String(), nullable=False)
+
+    host: orm.Mapped[str] = orm.mapped_column(sqla.String(), nullable=True)
+    port: orm.Mapped[int] = orm.mapped_column(sqla.Integer(), nullable=True)
+    api_url: orm.Mapped[str] = orm.mapped_column(sqla.String(), nullable=True)

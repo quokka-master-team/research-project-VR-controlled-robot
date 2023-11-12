@@ -7,3 +7,4 @@ class Errors(BaseError):
     stream_unit_already_exists = auto()
     insufficient_permissions_to_start_transmission = auto()
     stream_unit_in_use = auto()
+    timeout = auto()

@@ -9,7 +9,8 @@ class PostStreamUnit(BaseModel):
     name: str
     location: str
     description: str
-    video_url: str
+    host: str
+    port: int
     api_url: str
     secret: str | None = None
 
@@ -23,12 +24,6 @@ class PostStreamUnit(BaseModel):
     @classmethod
     def validate_location(cls, value: str) -> str:
         StreamUnitLocation(value)
-        return value
-
-    @field_validator("video_url", "api_url")
-    @classmethod
-    def validate_url(cls, value: str) -> str:
-        URL(value)
         return value
 
 

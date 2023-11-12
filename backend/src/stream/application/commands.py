@@ -32,7 +32,8 @@ class StreamUnitCommandService:
         with self._uow as uow:
             if uow.stream_unit_repository.stream_unit_with_unique_params_exist(
                 name=stream_unit.name,
-                video_url=stream_unit.video_url,
+                host=stream_unit.host,
+                port=stream_unit.port,
                 api_url=stream_unit.api_url,
             ):
                 raise StreamUnitAlreadyExists
@@ -43,7 +44,8 @@ class StreamUnitCommandService:
                 name=stream_unit.name,
                 location=stream_unit.location,
                 description=stream_unit.description,
-                video_url=stream_unit.video_url,
+                host=stream_unit.host,
+                port=stream_unit.port,
                 api_url=stream_unit.api_url,
                 secret=stream_unit.secret,
             )

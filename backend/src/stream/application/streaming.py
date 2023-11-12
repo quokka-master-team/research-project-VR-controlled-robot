@@ -75,14 +75,12 @@ class StreamingService:
     async def _start_transmission(
         self, stream_unit: StreamUnitDto, connection: WebSocket
     ) -> None:
-        transmission = Transmission(stream_unit)
-        while self._transmit():
-            content = transmission.receive_data()
-
-            await connection.send_json(
-                WebSocketMessage(content, ContentType.data).json()
-            )
-            await connection.receive()
+        with Transmission(stream_unit) as t:
+            while self._transmit():
+                await connection.send_json(
+                    WebSocketMessage(t.receive_data(), ContentType.data).json()
+                )
+                await connection.receive()
 
     async def start(
         self, token: str, stream_unit_id: UUID, connection: WebSocket
@@ -95,7 +93,6 @@ class StreamingService:
             self._connection_manager.bind_stream_unit_with_connection(
                 stream_unit_id, connection
             )
-
             stream_unit = self._get_stream_unit(stream_unit_id)
             await self._start_transmission(stream_unit, connection)
             await self._connection_manager.disconnect(connection)
@@ -119,6 +116,12 @@ class StreamingService:
         except StreamUnitNotFound:
             await self._send_error_message_and_disconnect(
                 connection, Errors.stream_unit_not_found
+            )
+
+        except TimeoutError as err:
+            logging.info(str(err))
+            await self._send_error_message_and_disconnect(
+                connection, Errors.timeout
             )
 
         except RuntimeError as err:

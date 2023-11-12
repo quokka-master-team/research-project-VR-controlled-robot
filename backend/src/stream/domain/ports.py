@@ -26,14 +26,15 @@ class StreamUnitRepositoryInterface(Protocol):
         name: StreamUnitName,
         location: StreamUnitLocation,
         description: str,
-        video_url: URL,
+        host: str,
+        port: int,
         api_url: URL,
         secret: str | None,
     ) -> None:
         ...
 
     def stream_unit_with_unique_params_exist(
-        self, name: StreamUnitName, video_url: URL, api_url: URL
+        self, name: StreamUnitName, host: str, port: int, api_url: URL
     ) -> bool:
         ...
 
