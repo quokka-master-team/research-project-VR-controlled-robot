@@ -4,14 +4,39 @@ import imutils
 import socket
 import base64
 import logging
+from threading import Thread
+from typing import Tuple
 
 logging.basicConfig(level=logging.INFO)
 
-Address = tuple[str, int]
+Address = Tuple[str, int]
 
 BUFF_SIZE = 65536
 FRAME_WIDTH = 600
 TIMEOUT = 5
+
+
+class ClientThread(Thread):
+    def __init__(self, address: Address, server: socket.socket, vid: cv2.VideoCapture) -> None:
+        super().__init__()
+        self.address = address
+        self.server = server
+        self.vid = vid
+        self.stop = False
+
+    def run(self):
+        while self.vid.isOpened() and not self.stop:
+            _, frame = self.vid.read()
+            frame = imutils.resize(frame, width=FRAME_WIDTH)
+            encoded, buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 80])
+            message = base64.b64encode(buffer)
+
+            try:
+                self.server.sendto(message, self.address)
+            except Exception as exc:
+                logging.error(str(exc))
+
+        logging.info(f"Closing connection with: {self.address}")
 
 
 def _create_socket(address: Address) -> socket.socket:
@@ -23,8 +48,6 @@ def _create_socket(address: Address) -> socket.socket:
 
 
 def _connect_client(server: socket.socket) -> Address:
-    server.settimeout(None)
-
     _, client_address = server.recvfrom(1024)
     server.sendto(
         str.encode("Connected"),
@@ -35,32 +58,6 @@ def _connect_client(server: socket.socket) -> Address:
     return client_address
 
 
-def _send_data(server: socket.socket, client_address: Address, vid: cv2.VideoCapture) -> None:
-    server.settimeout(TIMEOUT)
-
-    while vid.isOpened():
-        try:
-            message, address = server.recvfrom(1024)
-        except TimeoutError:
-            break
-
-        if address != client_address:
-            server.sendto(
-                str.encode("Cannot connect to server, other client is connected"),
-                address
-            )
-            continue
-
-        if message.decode() == "COMMAND: STOP":
-            break
-
-        _, frame = vid.read()
-        frame = imutils.resize(frame, width=FRAME_WIDTH)
-        encoded, buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 80])
-        message = base64.b64encode(buffer)
-        server.sendto(message, client_address)
-
-
 def main(host: str, port: int) -> None:
     address = (host, port)
 
@@ -68,11 +65,15 @@ def main(host: str, port: int) -> None:
     server = _create_socket(address)
     logging.info(f'Waiting for connections on {address}')
 
+    prev_conn = None
     while True:
         client_address = _connect_client(server)
-        _send_data(server, client_address, vid)
-        logging.info(f"Closing connection with: {client_address}")
+        if prev_conn:
+            prev_conn.stop = True
+
+        thread = ClientThread(client_address, server, vid)
+        thread.start()
+        prev_conn = thread
 
 
-if __name__ == "__main__":
-    main(host='10.0.0.9', port=1234)
+main(host='10.0.0.9', port=1234)
