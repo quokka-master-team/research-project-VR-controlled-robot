@@ -31,16 +31,14 @@ def _connect_to_server(client: socket.socket, server_address: Address) -> str:
 	return message.decode()
 
 
-def _receive_data(client: socket.socket, server_address: Address) -> None:
+def _receive_data(client: socket.socket) -> None:
 	fps, st, frames_to_count, cnt = (0, 0, 20, 0)
 
 	while True:
 		key = cv2.waitKey(1) & 0xFF
 		if key == ord('q'):
-			client.sendto(str.encode("COMMAND: STOP"), server_address)
 			break
 
-		client.sendto(str.encode("ping"), server_address)
 		packet, _ = client.recvfrom(BUFF_SIZE)
 		logging.info(f"Received packet size: {len(packet)}")
 
@@ -70,7 +68,7 @@ def main(host: str, port: int) -> None:
 		return
 	logging.info(f"Connected to server: {server_address}")
 
-	_receive_data(client, server_address)
+	_receive_data(client)
 	logging.info(f"Disconnected from server: {server_address}")
 
 
