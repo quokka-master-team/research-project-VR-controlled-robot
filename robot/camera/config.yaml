@@ -1,7 +1,7 @@
 management:
-  server: localhost
+  server: 127.0.0.1
   port: 8080
 
 streaming:
-  server: localhost
+  server: 127.0.0.1
   port: 3000
