@@ -1,6 +1,7 @@
 #include "VideoStream.hpp"
 #include <stdexcept>
 #include <chrono>
+#include <gst/app/gstappsink.h>
 
 void VideoStream::ValidatePipeline(GError*& handle)
 {
@@ -13,6 +14,15 @@ void VideoStream::ValidatePipeline(GError*& handle)
     {
         throw std::runtime_error("Failed to create pipeline: Unknown error.");
     }
+}
+
+void VideoStream::PrepareStreamBuffer(
+    asio::io_context& context, 
+    asio::posix::stream_descriptor& dataToStream,
+    asio::ip::udp::socket& socket,
+    asio::ip::udp::endpoint& endpoint)
+{
+    
 }
 
 void VideoStream::HandleCommand(const std::string& command)
@@ -88,14 +98,65 @@ void VideoStream::SetPipeline(const std::string& str)
     this->ValidatePipeline(errorHandle);
 }
 
+void VideoStream::StreamOn(const std::string &serverIp, unsigned short port)
+{
+    log.Info("Binding to " + serverIp + ":" + std::to_string(port) + "...");
+
+    Start();
+
+    this->streamOverNetwork.store(true);
+    this->streamingThread = std::thread([this, /*streamPipe,*/ serverIp, port]() 
+    {
+        log.Info("Going live!");
+
+        asio::io_context context;
+        auto socket = asio::ip::udp::socket(context, asio::ip::udp::v4());
+        auto endpoint = asio::ip::udp::endpoint(asio::ip::make_address(serverIp), asio::ip::port_type(port));
+
+        auto appsink = GST_APP_SINK(gst_bin_get_by_name(GST_BIN(pipeline), "stream"));
+        
+
+        while (this->streamOverNetwork.load())
+        {
+            GstSample* sample = gst_app_sink_pull_sample(appsink);
+
+            if (sample)
+            {
+                GstBuffer* buffer = gst_sample_get_buffer(sample);
+                GstMapInfo map;
+
+                if (gst_buffer_map(buffer, &map, GST_MAP_READ))
+                {
+                    try
+                    {
+                        // Send the buffer data over UDP using ASIO
+                        socket.send_to(asio::buffer(map.data, map.size), endpoint);
+                    }
+                    catch (const std::system_error& e)
+                    {
+                        printf("Message size: %ld\n", map.size);
+                        log.Critical(e.what());
+                    }
+
+                    gst_buffer_unmap(buffer, &map);
+                }
+
+                gst_sample_unref(sample);
+            }
+        }
+    });
+}
+
 void VideoStream::ListenOn(const std::string &serverIp, unsigned short port)
 {
+    log.Info("Binding to " + serverIp + ":" + std::to_string(port) + "...");
+
     acceptor = std::make_unique<asio::ip::tcp::acceptor>(
         this->clientContext, asio::ip::tcp::endpoint(asio::ip::make_address(serverIp), port)
     );
 
     this->listenToClient.store(true);
-    this->clientListener = std::thread([this]() 
+    this->listenerThread = std::thread([this]() 
     {
         while (this->listenToClient.load())
         {
@@ -106,8 +167,6 @@ void VideoStream::ListenOn(const std::string &serverIp, unsigned short port)
             this->clientContext.reset();
         }
     });
-
-    log.Info(name + " is listening on " + serverIp + ":" + std::to_string(port));
 }
 
 bool VideoStream::IsListening()
@@ -119,7 +178,7 @@ void VideoStream::Start()
 {
     if (isStreaming)
     {
-        this->log.Warning(this->name + ": I'm already streaming!");
+        this->log.Warning("Stream is already live!");
         return;
     }
 
@@ -129,7 +188,8 @@ void VideoStream::Start()
     }
 
     this->streamLoop = g_main_loop_new(NULL, FALSE);
-    this->streamThread = std::make_unique<std::thread>([this]() {
+    this->cameraThread = std::thread([this]()
+    {
         g_main_loop_run(this->streamLoop);
     });
     this->isStreaming = true;
@@ -139,29 +199,41 @@ void VideoStream::Stop()
 {
     if (!this->isStreaming)
     {
-        this->log.Warning(this->name + ": I wasn't streaming this time...");
         return;
     }
 
+    // 1. Stop sending stream over network
+    if (this->streamOverNetwork.load())
+    {
+        this->streamOverNetwork.store(false);
+        if (this->streamingThread.joinable())
+        {
+            this->streamingThread.join();
+        }
+    }
+    
+    // 2. Stop the recording process
     if (this->streamLoop)
     {
-        g_main_loop_quit(this->streamLoop);
         gst_element_set_state(this->pipeline, GST_STATE_NULL);
+        g_main_loop_quit(this->streamLoop);
     }
 
-    if (this->streamThread && this->streamThread->joinable()) {
-        this->streamThread->join();
+    if (this->cameraThread.joinable())
+    {
+        this->cameraThread.join();
     }
     this->isStreaming = false;
 }
 
 VideoStream::~VideoStream()
 {
+    Stop();
     this->clientContext.stop();
 
-    if (this->clientListener.joinable())
+    if (this->listenerThread.joinable())
     {
-        this->clientListener.join();
+        this->listenerThread.join();
     }
 
     if (this->pipeline)
@@ -175,5 +247,5 @@ VideoStream::~VideoStream()
         g_main_loop_unref(this->streamLoop);
     }
     
-    log.Info(this->name + " closed!");
+    log.Info("Stream closed!");
 }

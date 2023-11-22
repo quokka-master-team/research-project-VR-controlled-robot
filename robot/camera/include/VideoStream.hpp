@@ -1,3 +1,4 @@
+#pragma once
 #include <string>
 #include <asio.hpp>
 
@@ -5,31 +6,37 @@
 
 class VideoStream
 {
-    std::string name;
     bool isStreaming = false;
 
-    std::unique_ptr<std::thread> streamThread;
+    std::thread cameraThread;
     GstElement* pipeline = nullptr;
     GMainLoop* streamLoop = nullptr;
 
+    std::thread streamingThread;
+    std::atomic<bool> streamOverNetwork{false};
+
     std::unique_ptr<asio::ip::tcp::acceptor> acceptor;
     std::atomic<bool> listenToClient{false};
-    std::thread clientListener;
+    std::thread listenerThread;
     asio::io_context clientContext;
 
     VideoStreamManager& manager = VideoStreamManager::Get();
     Log& log = Log::Get();
 
     void ValidatePipeline(GError*& handle);
+    void PrepareStreamBuffer(
+        asio::io_context& context,
+        asio::posix::stream_descriptor& dataToStream,
+        asio::ip::udp::socket& socket,
+        asio::ip::udp::endpoint& endpoint
+    );
     void HandleCommand(const std::string& command);
     void HandleRequest(std::shared_ptr<asio::ip::tcp::socket> socket);
     void ListenForRequests();
 
 public:
-    VideoStream(const std::string& name) : name(name)
-    {}
-
     void SetPipeline(const std::string& str);
+    void StreamOn(const std::string& serverIp, unsigned short port);
     void ListenOn(const std::string& serverIp, unsigned short port);
     bool IsListening();
     void Start();
