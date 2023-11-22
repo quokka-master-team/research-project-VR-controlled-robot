@@ -111,7 +111,7 @@ void VideoStream::StreamOn(const std::string &serverIp, unsigned short port)
 
         asio::io_context context;
         auto socket = asio::ip::udp::socket(context, asio::ip::udp::v4());
-        auto endpoint = asio::ip::udp::endpoint(asio::ip::make_address(serverIp), asio::ip::port_type(port));
+        auto endpoint = asio::ip::udp::endpoint(asio::ip::make_address(serverIp), port);
 
         auto appsink = GST_APP_SINK(gst_bin_get_by_name(GST_BIN(pipeline), "stream"));
         
