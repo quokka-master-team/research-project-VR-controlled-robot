@@ -8,11 +8,7 @@ GStreamerHandler::GStreamerHandler()
 
 GStreamerHandler::~GStreamerHandler()
 {
-    if (this->pipeline)
-    {
-        gst_element_set_state(pipeline, GST_STATE_NULL);
-        gst_object_unref(GST_OBJECT(this->pipeline));
-    }
+    this->Stop();
 
     if (this->streamLoop)
     {
