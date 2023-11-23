@@ -1,15 +1,42 @@
 #include "VideoStream.hpp"
 #include <stdexcept>
 #include <chrono>
-#include <gst/app/gstappsink.h>
 
-void VideoStream::HandleCommand(const std::string& command)
+bool VideoStream::IsArgumentsCountValid(const std::vector<std::string> &arguments, int expected)
 {
-    auto result = this->command.find(command);
-
-    if (result != this->command.end())
+    if (arguments.size() != expected)
     {
-        result->second();
+        std::string argumentList = "";
+        for (auto arg : arguments)
+        {
+            argumentList += arg + "; ";
+        }
+
+        log.Error("Expected " + std::to_string(expected) + " argument(s), got " + 
+            std::to_string(arguments.size()) + ": " + argumentList);
+        return false;
+    }
+
+    return true;
+}
+
+void VideoStream::HandleCommand(const std::string &command)
+{
+    auto commandText = std::istringstream(command);
+    auto tokens = std::vector<std::string>
+    {
+        std::istream_iterator<std::string>
+        {
+            commandText
+        },
+        std::istream_iterator<std::string>{}
+    };
+
+    auto searchedCommand = this->command.find(tokens[0]);
+    if (searchedCommand != this->command.end())
+    {
+        auto args = std::vector<std::string>(tokens.begin() + 1, tokens.end());
+        searchedCommand->second(args);
     }
     else
     {
@@ -62,7 +89,7 @@ void VideoStream::ListenForRequests()
 
 VideoStream::VideoStream()
 {
-    command["START"] = [this]()
+    command["START"] = [this](const std::vector<std::string>&)
     {
         if (!gstreamer.IsStreaming())
         {
@@ -70,7 +97,7 @@ VideoStream::VideoStream()
         }
     };
 
-    command["STOP"] = [this]()
+    command["STOP"] = [this](const std::vector<std::string>&)
     {
         if (gstreamer.IsStreaming())
         {
@@ -78,9 +105,35 @@ VideoStream::VideoStream()
         }
     };
 
-    command["EXIT"] = [this]()
+    command["EXIT"] = [this](const std::vector<std::string>&)
     {
         listenToClient.store(false);
+    };
+
+    command["USE"] = [this](const std::vector<std::string>& args)
+    {
+        if (args.empty())
+        {
+            log.Error("Expected pipeline argument!");
+            return;
+        }
+
+        std::string pipeline = "";
+        for (auto arg : args)
+        {
+            pipeline += arg + " ";
+        }
+
+        if (gstreamer.IsStreaming())
+        {
+            gstreamer.Stop();
+            gstreamer.SetPipeline(pipeline);
+            gstreamer.Start();
+        }
+        else
+        {
+            gstreamer.SetPipeline(pipeline);
+        }
     };
 }
 
@@ -113,7 +166,7 @@ bool VideoStream::IsListening()
 
 VideoStream::~VideoStream()
 {
-    command["STOP"]();
+    listenToClient.store(false);
 
     clientContext.stop();
 

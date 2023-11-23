@@ -23,17 +23,21 @@ GStreamerHandler::~GStreamerHandler()
     log.Info("Goodbye! (~˘▾˘)~");
 }
 
-void GStreamerHandler::ValidatePipeline(GError *&handle)
+bool GStreamerHandler::IsPipelineValid(GstElement* pipeline, GError *&handle)
 {
     if (handle)
     {
-        throw std::runtime_error("Failed to create pipeline: " + std::string(handle->message));
+        log.Error("Failed to create pipeline: " + std::string(handle->message));
+        return false;
     }
 
-    if (!this->pipeline)
+    if (!pipeline)
     {
-        throw std::runtime_error("Failed to create pipeline: Unknown error.");
+        log.Error("Failed to create pipeline: Unknown error.");
+        return false;
     }
+
+    return true;
 }
 
 void GStreamerHandler::SetPipeline(const std::string &pipeline)
@@ -44,31 +48,53 @@ void GStreamerHandler::SetPipeline(const std::string &pipeline)
     }
 
     GError* errorHandle = nullptr;
-    this->pipeline = gst_parse_launch(pipeline.c_str(), &errorHandle);
+    auto newPipeline = gst_parse_launch(pipeline.c_str(), &errorHandle);
 
-    this->ValidatePipeline(errorHandle);
+    if (!IsPipelineValid(newPipeline, errorHandle))
+    {
+        log.Warning("Failed to load new pipeline. Reverting changes!");
+
+        if (this->pipeline != nullptr)
+        {
+            gst_parse_launch(pipeline.c_str(), &errorHandle);
+        }
+
+        return;
+    }
+    else
+    {
+        log.Info("Pipeline '" + pipeline + "' loaded!");
+    }
+
+    this->pipeline = newPipeline;
 }
 
 void GStreamerHandler::Start()
 {
-    if (isStreaming)
+    if (this->pipeline == nullptr)
+    {
+        log.Error("Pipeline is not set! Aborting.");
+        return;
+    }
+
+    if (this->isStreaming)
     {
         log.Warning("Stream is already live!");
         return;
     }
 
-    if (gst_element_set_state(pipeline, GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE)
+    if (gst_element_set_state(this->pipeline, GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE)
     {
         throw std::runtime_error("Failed to start pipeline!");
     }
 
-    streamLoop = g_main_loop_new(NULL, FALSE);
-    streamingThread = std::thread([this]()
+    this->streamLoop = g_main_loop_new(NULL, FALSE);
+    this->streamingThread = std::thread([this]()
     {
         g_main_loop_run(this->streamLoop);
     });
 
-    isStreaming = true;
+    this->isStreaming = true;
 }
 
 void GStreamerHandler::Stop()

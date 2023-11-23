@@ -18,7 +18,7 @@ class GStreamerHandler
     GStreamerHandler();
     ~GStreamerHandler();
 
-    void ValidatePipeline(GError*& handle);
+    bool IsPipelineValid(GstElement* pipeline, GError *&handle);
 
 public:
     static GStreamerHandler& Get() {
