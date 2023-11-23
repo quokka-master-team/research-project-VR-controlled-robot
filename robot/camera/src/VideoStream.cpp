@@ -103,13 +103,13 @@ VideoStream::VideoStream()
             return;
         }
 
-        log.Info("Streaming started!");
-
         if (!gstreamer.IsStreaming())
         {
             gstreamer.BuildPipeline(this->ipAddress, this->port);
             gstreamer.Start();
         }
+
+        log.Info("Streaming started!");
     };
 
     this->command["STOP"] = [this](const std::vector<std::string>&)
