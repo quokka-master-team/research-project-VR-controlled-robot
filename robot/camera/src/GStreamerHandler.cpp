@@ -67,6 +67,7 @@ void GStreamerHandler::Start()
     {
         g_main_loop_run(this->streamLoop);
     });
+
     isStreaming = true;
 }
 

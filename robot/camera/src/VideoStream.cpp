@@ -5,19 +5,16 @@
 
 void VideoStream::HandleCommand(const std::string& command)
 {
-    /*log.Info("Received command: " + command);
+    auto result = this->command.find(command);
 
-    if (command == "START")    this->Start();
-    if (command == "STOP")     this->Stop();
-    if (command == "EXIT")
+    if (result != this->command.end())
     {
-        if (isStreaming)
-        {
-            this->Stop();
-        }
-
-        this->listenToClient.store(false);
-    }*/
+        result->second();
+    }
+    else
+    {
+        log.Warning("Received unknown command: " + command + ". Ignoring.");
+    }
 }
 
 void VideoStream::HandleRequest(std::shared_ptr<asio::ip::tcp::socket> socket)
@@ -63,6 +60,30 @@ void VideoStream::ListenForRequests()
     );
 }
 
+VideoStream::VideoStream()
+{
+    command["START"] = [this]()
+    {
+        if (!gstreamer.IsStreaming())
+        {
+            gstreamer.Start();
+        }
+    };
+
+    command["STOP"] = [this]()
+    {
+        if (gstreamer.IsStreaming())
+        {
+            gstreamer.Stop();
+        }
+    };
+
+    command["EXIT"] = [this]()
+    {
+        listenToClient.store(false);
+    };
+}
+
 void VideoStream::ListenOn(const std::string &serverIp, unsigned short port)
 {
     log.Info("Binding to " + serverIp + ":" + std::to_string(port) + "...");
@@ -92,16 +113,13 @@ bool VideoStream::IsListening()
 
 VideoStream::~VideoStream()
 {
-    if (gstreamer.IsStreaming())
-    {
-        gstreamer.Stop();
-    }
+    command["STOP"]();
 
-    this->clientContext.stop();
+    clientContext.stop();
 
-    if (this->listenerThread.joinable())
+    if (listenerThread.joinable())
     {
-        this->listenerThread.join();
+        listenerThread.join();
     }
 
     log.Info("Stream closed!");

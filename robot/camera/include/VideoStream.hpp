@@ -1,5 +1,7 @@
 #pragma once
 #include <string>
+#include <functional>
+#include <unordered_map>
 #include <asio.hpp>
 
 #include "GStreamerHandler.hpp"
@@ -14,11 +16,15 @@ class VideoStream
     std::thread listenerThread;
     asio::io_context clientContext;
 
+    std::unordered_map<std::string, std::function<void()>> command;
+
     void HandleCommand(const std::string& command);
     void HandleRequest(std::shared_ptr<asio::ip::tcp::socket> socket);
     void ListenForRequests();
 
 public:
+    VideoStream();
+
     void ListenOn(const std::string& serverIp, unsigned short port);
     bool IsListening();
 
