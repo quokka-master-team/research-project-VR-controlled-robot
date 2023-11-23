@@ -10,6 +10,7 @@ class GStreamerHandler
     std::atomic<bool> isStreaming{false};
     std::thread streamingThread;
 
+    std::string rawPipeline = "";
     GstElement* pipeline = nullptr;
     GMainLoop* streamLoop = nullptr;
 
@@ -30,6 +31,7 @@ public:
     void operator=(GStreamerHandler const&) = delete;
 
     void SetPipeline(const std::string& pipeline);
+    void BuildPipeline(const std::string& ipAddress, const std::string& port);
     void Start();
     void Stop();
     bool IsStreaming();

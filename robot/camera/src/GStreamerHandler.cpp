@@ -38,6 +38,18 @@ bool GStreamerHandler::IsPipelineValid(GstElement* pipeline, GError *&handle)
 
 void GStreamerHandler::SetPipeline(const std::string &pipeline)
 {
+    this->rawPipeline = pipeline;
+    log.Info("Pipeline set to: " + this->rawPipeline);
+}
+
+void GStreamerHandler::BuildPipeline(const std::string &ipAddress, const std::string &port)
+{
+    auto pipeline = this->rawPipeline;
+
+    // Replaces parts of pipeline like {IP} or {PORT} with known data
+    pipeline.replace(pipeline.find("{ADDRESS}"), sizeof("{ADDRESS}") - 1, ipAddress);
+    pipeline.replace(pipeline.find("{PORT}"), sizeof("{PORT}") - 1, port);
+
     if (this->pipeline != nullptr)
     {
         gst_object_unref(GST_OBJECT(this->pipeline));

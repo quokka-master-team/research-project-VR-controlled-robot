@@ -18,6 +18,9 @@ class VideoStream
 
     std::unordered_map<std::string, std::function<void(const std::vector<std::string>&)>> command;
 
+    std::string ipAddress;
+    std::string port;
+
     bool IsArgumentsCountValid(const std::vector<std::string>& arguments, int expected);
     void HandleCommand(const std::string& command);
     void HandleRequest(std::shared_ptr<asio::ip::tcp::socket> socket);

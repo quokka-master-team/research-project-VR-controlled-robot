@@ -89,32 +89,74 @@ void VideoStream::ListenForRequests()
 
 VideoStream::VideoStream()
 {
-    command["START"] = [this](const std::vector<std::string>&)
+    this->command["START"] = [this](const std::vector<std::string>&)
     {
+        if (this->ipAddress.empty())
+        {
+            log.Error("Cannot start streaming as ADDRESS wasn't specified!");
+            return;
+        }
+
+        if (this->port.empty())
+        {
+            log.Error("Cannot start streaming as PORT wasn't specified!");
+            return;
+        }
+
+        log.Info("Streaming started!");
+
         if (!gstreamer.IsStreaming())
         {
+            gstreamer.BuildPipeline(this->ipAddress, this->port);
             gstreamer.Start();
         }
     };
 
-    command["STOP"] = [this](const std::vector<std::string>&)
+    this->command["STOP"] = [this](const std::vector<std::string>&)
     {
         if (gstreamer.IsStreaming())
         {
             gstreamer.Stop();
         }
+
+        log.Info("Streaming stopped!");
     };
 
-    command["EXIT"] = [this](const std::vector<std::string>&)
+    this->command["EXIT"] = [this](const std::vector<std::string>&)
     {
-        listenToClient.store(false);
+        log.Info("Quitting...");
+
+        this->listenToClient.store(false);
     };
 
-    command["USE"] = [this](const std::vector<std::string>& args)
+    this->command["SET"] = [this](const std::vector<std::string>& args)
+    {
+        if (!this->IsArgumentsCountValid(args, 2))
+        {
+            return;
+        }
+
+        if (args[0] == "ADDRESS")
+        {
+            this->ipAddress = args[1];
+            log.Info("New IP address " + args[1] + " set!");
+        }
+        else if (args[0] == "PORT")
+        {
+            this->port = args[1];
+            log.Info("New port " + args[1] + " set!");
+        }
+        else
+        {
+            log.Warning("Unknown parameter: " + args[0] + ". Aborting!");
+        }
+    };
+
+    this->command["USE"] = [this](const std::vector<std::string>& args)
     {
         if (args.empty())
         {
-            log.Error("Expected pipeline argument!");
+            this->log.Error("Expected pipeline argument!");
             return;
         }
 
