@@ -4,41 +4,36 @@
 
 class ConfigReader
 {
-    std::string managementServerIp;
-    unsigned short managementPort;
-
-    std::string streamingServerIp;
-    unsigned short streamingPort;
+    YAML::Node config;
 
 public:
     ConfigReader(const std::string& filename)
     {
-        auto config = YAML::LoadFile(filename);
-
-        managementServerIp = config["management"]["server"].as<std::string>();
-        managementPort = config["management"]["port"].as<unsigned short>();
-        
-        streamingServerIp = config["streaming"]["server"].as<std::string>();
-        streamingPort = config["streaming"]["port"].as<unsigned short>();
+        config = YAML::LoadFile(filename);
     }
 
     std::string getManagementServerIp()
     {
-        return managementServerIp;
+        return config["management"]["server"].as<std::string>();
     }
 
     unsigned short getManagementPort()
     {
-        return managementPort;
+        return config["management"]["port"].as<unsigned short>();
     }
 
     std::string getStreamingServerIp()
     {
-        return streamingServerIp;
+        return config["streaming"]["server"].as<std::string>();
     }
 
     unsigned short getStreamingPort()
     {
-        return streamingPort;
+        return config["streaming"]["port"].as<unsigned short>();
+    }
+
+    std::string getPipeline(const std::string& name)
+    {
+        return config[name].as<std::string>();
     }
 };

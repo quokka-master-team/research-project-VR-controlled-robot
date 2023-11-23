@@ -6,12 +6,8 @@ int main(int argc, char *argv[])
     ConfigReader configuration("config.yaml");
     VideoStream stream;
 
-    auto pipeline = "v4l2src ! videoconvert ! jpegenc quality=50 ! appsink name=stream";
-
-    try 
+    try
     {
-        stream.SetPipeline(pipeline);
-        stream.StreamOn(configuration.getStreamingServerIp(), configuration.getStreamingPort());
         stream.ListenOn(configuration.getManagementServerIp(), configuration.getManagementPort());
 
         while (stream.IsListening()) 
