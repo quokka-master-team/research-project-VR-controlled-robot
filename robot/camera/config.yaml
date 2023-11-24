@@ -4,5 +4,5 @@
 # Here you should provide a server IP and PORT from which you want to connect
 #
 management:
-  server: 127.0.0.1
-  port: 8080
+  server: 10.0.0.9
+  port: 5022
