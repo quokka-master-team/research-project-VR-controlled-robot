@@ -45,10 +45,18 @@ void GStreamerHandler::SetPipeline(const std::string &pipeline)
 void GStreamerHandler::BuildPipeline(const std::string &ipAddress, const std::string &port)
 {
     auto pipeline = this->rawPipeline;
+    
+    auto addressPos = pipeline.find("{ADDRESS}");
+    if (addressPos != std::string::npos)
+    {
+        pipeline.replace(addressPos, sizeof("{ADDRESS}") - 1, ipAddress);
+    }
 
-    // Replaces parts of pipeline like {IP} or {PORT} with known data
-    pipeline.replace(pipeline.find("{ADDRESS}"), sizeof("{ADDRESS}") - 1, ipAddress);
-    pipeline.replace(pipeline.find("{PORT}"), sizeof("{PORT}") - 1, port);
+    auto portPos = pipeline.find("{PORT}");
+    if (portPos != std::string::npos)
+    {
+        pipeline.replace(portPos, sizeof("{PORT}") - 1, port);
+    }
 
     if (this->pipeline != nullptr)
     {
