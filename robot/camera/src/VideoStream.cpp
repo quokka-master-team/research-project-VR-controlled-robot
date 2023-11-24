@@ -187,7 +187,7 @@ VideoStream::VideoStream()
     {
         gstreamer.Stop();
 
-        asio::ip::udp::socket udp_socket(clientContext, asio::ip::udp::endpoint(asio::ip::udp::v4(), 0));
+        asio::ip::udp::socket udp_socket(clientContext, asio::ip::udp::endpoint(asio::ip::udp::v4(), 5022));
         std::array<char, 1024> recv_buf;
         asio::ip::udp::endpoint sender_endpoint;
 
