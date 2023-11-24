@@ -16,13 +16,19 @@ class VideoStream
     std::thread listenerThread;
     asio::io_context clientContext;
 
-    std::unordered_map<std::string, std::function<void(const std::vector<std::string>&)>> command;
+    std::unordered_map<
+        std::string, 
+        std::function<void(
+            std::shared_ptr<asio::ip::tcp::socket>,
+            const std::vector<std::string>&
+        )>
+    > command;
 
     std::string ipAddress;
     std::string port;
 
     bool IsArgumentsCountValid(const std::vector<std::string>& arguments, int expected);
-    void HandleCommand(const std::string& command);
+    void HandleCommand(std::shared_ptr<asio::ip::tcp::socket> socket, const std::string& command);
     void HandleRequest(std::shared_ptr<asio::ip::tcp::socket> socket);
     void ListenForRequests();
 

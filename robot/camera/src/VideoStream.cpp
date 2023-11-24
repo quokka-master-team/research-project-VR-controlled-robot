@@ -20,7 +20,7 @@ bool VideoStream::IsArgumentsCountValid(const std::vector<std::string> &argument
     return true;
 }
 
-void VideoStream::HandleCommand(const std::string &command)
+void VideoStream::HandleCommand(std::shared_ptr<asio::ip::tcp::socket> socket, const std::string &command)
 {
     auto commandText = std::istringstream(command);
     auto tokens = std::vector<std::string>
@@ -36,7 +36,7 @@ void VideoStream::HandleCommand(const std::string &command)
     if (searchedCommand != this->command.end())
     {
         auto args = std::vector<std::string>(tokens.begin() + 1, tokens.end());
-        searchedCommand->second(args);
+        searchedCommand->second(socket, args);
     }
     else
     {
@@ -62,7 +62,7 @@ void VideoStream::HandleRequest(std::shared_ptr<asio::ip::tcp::socket> socket)
             std::string line;
             std::getline(input, line);
 
-            this->HandleCommand(line);
+            this->HandleCommand(socket, line);
             
             socket->close();
         }
@@ -94,7 +94,7 @@ void VideoStream::ListenForRequests()
 
 VideoStream::VideoStream()
 {
-    this->command["START"] = [this](const std::vector<std::string>&)
+    this->command["START"] = [this](std::shared_ptr<asio::ip::tcp::socket>, const std::vector<std::string>&)
     {
         if (this->ipAddress.empty())
         {
@@ -117,7 +117,7 @@ VideoStream::VideoStream()
         log.Info("Streaming started!");
     };
 
-    this->command["STOP"] = [this](const std::vector<std::string>&)
+    this->command["STOP"] = [this](std::shared_ptr<asio::ip::tcp::socket>, const std::vector<std::string>&)
     {
         if (gstreamer.IsStreaming())
         {
@@ -127,14 +127,14 @@ VideoStream::VideoStream()
         log.Info("Streaming stopped!");
     };
 
-    this->command["EXIT"] = [this](const std::vector<std::string>&)
+    this->command["EXIT"] = [this](std::shared_ptr<asio::ip::tcp::socket>, const std::vector<std::string>&)
     {
         log.Info("Quitting...");
 
         this->listenToClient.store(false);
     };
 
-    this->command["SET"] = [this](const std::vector<std::string>& args)
+    this->command["SET"] = [this](std::shared_ptr<asio::ip::tcp::socket>, const std::vector<std::string>& args)
     {
         if (!this->IsArgumentsCountValid(args, 2))
         {
@@ -157,7 +157,7 @@ VideoStream::VideoStream()
         }
     };
 
-    this->command["USE"] = [this](const std::vector<std::string>& args)
+    this->command["USE"] = [this](std::shared_ptr<asio::ip::tcp::socket>, const std::vector<std::string>& args)
     {
         if (args.empty())
         {
@@ -181,6 +181,27 @@ VideoStream::VideoStream()
         {
             gstreamer.SetPipeline(pipeline);
         }
+    };
+
+    command["PING"] = [this](std::shared_ptr<asio::ip::tcp::socket> socket, const std::vector<std::string>&)
+    {
+        std::string serverIP = socket->local_endpoint().address().to_string();
+        unsigned short serverPort = socket->local_endpoint().port();
+
+        std::string response = "Server IP: " + serverIP + ", Port: " + std::to_string(serverPort);
+
+        // Send response to client
+        asio::async_write(*socket, asio::buffer(response), 
+            [this, socket](const asio::error_code& error, std::size_t)
+            {
+                if (error)
+                {
+                    log.Error("Error sending PING response: " + error.message());
+                }
+
+                socket->close();
+            }
+        );
     };
 }
 
