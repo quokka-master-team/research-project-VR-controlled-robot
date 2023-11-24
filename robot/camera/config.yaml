@@ -5,4 +5,4 @@
 #
 management:
   server: 10.0.0.9
-  port: 5022
+  port: 5020
