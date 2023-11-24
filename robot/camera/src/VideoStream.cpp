@@ -80,6 +80,11 @@ void VideoStream::ListenForRequests()
                 return;
             }
 
+            // Get the remote endpoint's IP address and port
+            std::string remoteIP = socket.remote_endpoint().address().to_string();
+            unsigned short remotePort = socket.remote_endpoint().port();
+            log.Debug("Received request from: " + remoteIP + ":" + std::to_string(remotePort));
+            
             this->HandleRequest(
                 std::make_shared<asio::ip::tcp::socket>(std::move(socket))
             );
