@@ -204,8 +204,8 @@ VideoStream::VideoStream()
             log.Error("Error receiving UDP message: " + ec.message());
         }
 
-        std::string serverIP = udp_socket.local_endpoint().address().to_string();
-        unsigned short serverPort = udp_socket.local_endpoint().port();
+        std::string serverIP = sender_endpoint.address().to_string();
+        unsigned short serverPort = sender_endpoint.port();
 
         std::string response = "Server IP: " + serverIP + ", Port: " + std::to_string(serverPort);
 
