@@ -207,7 +207,8 @@ VideoStream::VideoStream()
         std::string serverIP = sender_endpoint.address().to_string();
         unsigned short serverPort = sender_endpoint.port();
 
-        std::string response = "Server IP: " + serverIP + ", Port: " + std::to_string(serverPort);
+        std::string response = std::to_string(serverPort);
+        this->port = serverPort;
 
         asio::async_write(*socket, asio::buffer(response), 
             [this, socket](const asio::error_code& error, std::size_t)
