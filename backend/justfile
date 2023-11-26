@@ -6,6 +6,8 @@ BIN := VENV_DIR + '/bin'
 PIP_COMPILE := BIN + '/pip-compile'
 PIP := BIN + '/pip'
 
+INIT_DB_FILE := "db/db_init.gz"
+
 BLACK := BIN + '/black'
 MYPY := BIN + '/mypy'
 FLAKE := BIN + '/flake8'
@@ -42,11 +44,17 @@ build-app:
 run-app:
     {{DOCKER_COMPOSE}} up
 
-setup: && install-local build-app upgrade-db run-app
+build-and-run: build-app run-app
+
+setup: && install-local build-app init_db upgrade-db run-app
     if ! {{path_exists(VENV_DIR)}}; then just create-venv; fi
 
 psql:
     {{DOCKER_COMPOSE}} run --rm api psql --host=$POSTGRES_HOST --dbname=$POSTGRES_DB --username=$POSTGRES_USER
+
+init_db:
+    {{DOCKER_COMPOSE}} run --rm api wait-for-it db:5432
+    {{DOCKER_COMPOSE}} run --rm api pg_restore --host=$POSTGRES_HOST --dbname=$POSTGRES_DB --username=$POSTGRES_USER --format=custom {{INIT_DB_FILE}}
 
 lint:
     {{BLACK}} src/
@@ -57,10 +65,12 @@ app-bash:
     {{DOCKER_COMPOSE}} exec -it api bash
 
 migrate-db message:
+    {{DOCKER_COMPOSE}} run --rm api wait-for-it db:5432
     {{DOCKER_COMPOSE}} run --rm api alembic revision --autogenerate -m '{{message}}'
-    @echo "$({{DOCKER_COMPOSE}} run --rm api alembic history)" | sed -E 's/<base> -> ([a-f0-9]+) \(head\), (.*)/\1 \2/' > {{CURRENT_MIGRATION}}
+    @echo "$({{DOCKER_COMPOSE}} run --rm api alembic history)" | sed -n '1p' | sed -e 's/-> //' -e 's/ (head)//' > {{CURRENT_MIGRATION}}
 
 upgrade-db:
+    {{DOCKER_COMPOSE}} run --rm api wait-for-it db:5432
     {{DOCKER_COMPOSE}} run --rm api alembic upgrade head
 
 remove-containers:

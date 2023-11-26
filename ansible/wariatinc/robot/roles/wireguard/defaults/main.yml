@@ -1,0 +1,28 @@
+private_key_path: /etc/wireguard/private.key
+public_key_path: /etc/wireguard/public.key
+public_iface: ens3
+wireguard_iface: wg0
+
+
+forwarded_ports:
+  - protocol: tcp
+    vpn_server_port: 50011
+    peer_port: 5011
+  - protocol: tcp
+    vpn_server_port: 50012
+    peer_port: 5012
+  - protocol: tcp
+    vpn_server_port: 50013
+    peer_port: 5013
+  - protocol: tcp
+    vpn_server_port: 50014
+    peer_port: 5014
+  - protocol: udp  # do ogladania stream z socket
+    vpn_server_port: 9000
+    peer_port: 1234
+  - protocol: tcp  # do polaczenia po ssh z nuc
+    vpn_server_port: 1024
+    peer_port: 22
+  - protocol: tcp  # do polaczenia po xrdp z nuc
+    vpn_server_port: 3390
+    peer_port: 3389

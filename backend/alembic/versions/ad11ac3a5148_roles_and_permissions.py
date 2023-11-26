@@ -63,10 +63,18 @@ def upgrade() -> None:
             ["users.id"],
         ),
     )
-    op.execute("""INSERT INTO permissions VALUES (gen_random_uuid(), 'test_permission', now(), now());""")
-    op.execute("""INSERT INTO roles VALUES (gen_random_uuid(), 'admin', now(), now())""")
-    op.execute("""INSERT INTO roles VALUES (gen_random_uuid(), 'default', now(), now())""")
-    op.execute("""INSERT INTO roles_permissions (role_id, permission_id) (SELECT r.id, p.id FROM roles as r JOIN permissions as p ON p.name = 'test_permission' WHERE r.name='admin');""")
+    op.execute(
+        """INSERT INTO permissions VALUES (gen_random_uuid(), 'test_permission', now(), now());"""
+    )
+    op.execute(
+        """INSERT INTO roles VALUES (gen_random_uuid(), 'admin', now(), now())"""
+    )
+    op.execute(
+        """INSERT INTO roles VALUES (gen_random_uuid(), 'default', now(), now())"""
+    )
+    op.execute(
+        """INSERT INTO roles_permissions (role_id, permission_id) (SELECT r.id, p.id FROM roles as r JOIN permissions as p ON p.name = 'test_permission' WHERE r.name='admin');"""
+    )
 
 
 def downgrade() -> None:

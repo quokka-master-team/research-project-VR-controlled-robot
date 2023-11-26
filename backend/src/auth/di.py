@@ -17,7 +17,7 @@ class AuthModule(Module):
         cls.container[
             IAMTokenVerificationService
         ] = Auth0TokenVerificationService(
-            user_service=cls.container[UserServiceInterface],
+            user_service=cls.container[UserServiceInterface],  # type: ignore
             jwk_client=jwk_client,
             algorithms=settings.IAM_ALGORITHMS,
             audience=settings.IAM_CLIENT_ID,

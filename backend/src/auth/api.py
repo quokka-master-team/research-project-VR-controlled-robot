@@ -1,51 +1,57 @@
-from fastapi_class import View
-from fastapi import APIRouter, Request, Response, Depends
+from fastapi import APIRouter, Request, Response, Depends, status
 from fastapi.responses import RedirectResponse
 from authlib.integrations.starlette_client import OAuth
-from kink import inject
+from kink import di
 from src.auth.authentication import get_authenticated_user
 from typing import Annotated
 from src.user_management.users.domain.dtos import UserDto
+from src.core.api.models import ErrorMessageResponse
+from src.core.api.exceptions import UNAUTHORIZED
+import json
+import base64
 
-router = APIRouter()
+
+router = APIRouter(prefix="/auth")
 
 
-@View(router)
-@inject
-class AuthResource:
+@router.get("", status_code=status.HTTP_307_TEMPORARY_REDIRECT)
+async def auth(
+    request: Request,
+    redirect_uri: str,
+    oauth: Annotated[OAuth, Depends(lambda: di[OAuth])],
+) -> Response:
     """Redirects to IAM login page"""
 
-    def __init__(self, oauth: OAuth) -> None:
-        self.oauth = oauth
-
-    async def get(self, request: Request, redirect_uri: str) -> Response:
-        request.session["post_authorization_redirect"] = redirect_uri
-        return await self.oauth.iam.authorize_redirect(
-            request,
-            request.url_for("Get Auth Callback Resource")
-        )
+    request.session["post_authorization_redirect"] = redirect_uri
+    return await oauth.iam.authorize_redirect(
+        request, request.url_for("callback")
+    )
 
 
-@View(router, path="/callback")
-@inject
-class AuthCallbackResource:
+@router.get("/callback", status_code=status.HTTP_308_PERMANENT_REDIRECT)
+async def callback(
+    request: Request, oauth: Annotated[OAuth, Depends(lambda: di[OAuth])]
+) -> RedirectResponse:
     """Returns user token after successful authorization"""
 
-    def __init__(self, oauth: OAuth) -> None:
-        self.oauth = oauth
+    token = await oauth.iam.authorize_access_token(request)
+    encoded_token = base64.b64encode(json.dumps(token).encode()).decode()
 
-    async def get(self, request: Request) -> RedirectResponse:
-        request.session["token"] = await self.oauth.iam.authorize_access_token(request)
-        return RedirectResponse(request.session.pop("post_authorization_redirect"))
+    return RedirectResponse(
+        f"{request.session.pop('post_authorization_redirect')}"
+        f"?token={encoded_token}"
+    )
 
 
-@View(router, path="/test")
-class AuthTestResource:
-    @staticmethod
-    async def get(
-        current_user: Annotated[UserDto, Depends(get_authenticated_user)]
-    ) -> Response:
-        return Response(
-            content=f"User: {current_user.email} successfully authenticated",
-            status_code=200,
-        )
+@router.get(
+    "/test",
+    status_code=status.HTTP_200_OK,
+    responses={UNAUTHORIZED.status_code: ErrorMessageResponse},
+)
+async def test(
+    current_user: Annotated[UserDto, Depends(get_authenticated_user)]
+) -> Response:
+    return Response(
+        content=f"User: {current_user.email} successfully authenticated",
+        status_code=200,
+    )
