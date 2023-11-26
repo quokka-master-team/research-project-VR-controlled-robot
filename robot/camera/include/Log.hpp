@@ -24,7 +24,7 @@ public:
 
 	inline bool IsDebugOn() const
 	{
-		return spdlog::level::debug == spdlog::get_level();
+		return true; //spdlog::level::debug == spdlog::get_level();
 	}
 
 	inline void Debug(const std::string& message) const
