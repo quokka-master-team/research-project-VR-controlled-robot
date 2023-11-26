@@ -32,10 +32,23 @@ void VideoStream::HandleCommand(std::shared_ptr<asio::ip::tcp::socket> socket, c
         std::istream_iterator<std::string>{}
     };
 
+    
+
     auto searchedCommand = this->command.find(tokens[0]);
     if (searchedCommand != this->command.end())
     {
         auto args = std::vector<std::string>(tokens.begin() + 1, tokens.end());
+        
+        if (log.IsDebugOn())
+        {
+            std::string restOfCommand;
+            for (auto arg : args)
+            {
+                restOfCommand += " " + arg;
+            }
+            log.Debug("Received command: " + searchedCommand->first + restOfCommand);
+        }
+        
         searchedCommand->second(socket, args);
     }
     else
