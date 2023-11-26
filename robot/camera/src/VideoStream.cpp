@@ -37,7 +37,7 @@ void VideoStream::HandleCommand(std::shared_ptr<asio::ip::tcp::socket> socket, c
     {
         auto args = std::vector<std::string>(tokens.begin() + 1, tokens.end());
         
-        if (log.IsDebugOn())
+        if (true) // to change
         {
             std::string restOfCommand;
             for (auto arg : args)
