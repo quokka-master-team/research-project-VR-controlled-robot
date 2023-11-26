@@ -63,8 +63,6 @@ void VideoStream::HandleRequest(std::shared_ptr<asio::ip::tcp::socket> socket)
             std::getline(input, line);
 
             this->HandleCommand(socket, line);
-            
-            socket->close();
         }
     );
 }
@@ -183,44 +181,9 @@ VideoStream::VideoStream()
         }
     };
 
-    command["HANDSHAKE"] = [this](std::shared_ptr<asio::ip::tcp::socket> socket, const std::vector<std::string>&)
+    this->command["DISCONNECT"] = [this](std::shared_ptr<asio::ip::tcp::socket> socket, const std::vector<std::string>&)
     {
-        gstreamer.Stop();
-
-        asio::ip::udp::socket udp_socket(clientContext, asio::ip::udp::endpoint(asio::ip::udp::v4(), 5022));
-        std::array<char, 1024> recv_buf;
-        asio::ip::udp::endpoint sender_endpoint;
-
-        // Code smell - potentially if client would disconnect then we're stuck
-        std::error_code ec;
-        std::size_t length = udp_socket.receive_from(asio::buffer(recv_buf), sender_endpoint, 0, ec);
-
-        if (!ec && length > 0)
-        {
-            log.Info("Received UDP message from " + sender_endpoint.address().to_string() + ":" + std::to_string(sender_endpoint.port()));
-        }
-        else
-        {
-            log.Error("Error receiving UDP message: " + ec.message());
-        }
-
-        std::string serverIP = sender_endpoint.address().to_string();
-        unsigned short serverPort = sender_endpoint.port();
-
-        std::string response = std::to_string(serverPort);
-        this->port = serverPort;
-
-        asio::async_write(*socket, asio::buffer(response), 
-            [this, socket](const asio::error_code& error, std::size_t)
-            {
-                if (error)
-                {
-                    log.Error("Error sending HANDSHAKE response: " + error.message());
-                }
-
-                socket->close();
-            }
-        );
+        socket->close();
     };
 }
 
