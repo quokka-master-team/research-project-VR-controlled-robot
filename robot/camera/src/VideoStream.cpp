@@ -77,9 +77,9 @@ void VideoStream::HandleRequest()
     }
     catch (const std::system_error& e)
     {
-        log.Error("Error: " + std::string(e.what()));
+        log.Warning("Bad read: " + std::string(e.what()));
         
-        this->command["DISCONNECT"](std::vector<std::string>());
+        //this->command["DISCONNECT"](std::vector<std::string>());
     }
 }
 
