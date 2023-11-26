@@ -32,8 +32,6 @@ void VideoStream::HandleCommand(std::shared_ptr<asio::ip::tcp::socket> socket, c
         std::istream_iterator<std::string>{}
     };
 
-    
-
     auto searchedCommand = this->command.find(tokens[0]);
     if (searchedCommand != this->command.end())
     {
@@ -46,7 +44,11 @@ void VideoStream::HandleCommand(std::shared_ptr<asio::ip::tcp::socket> socket, c
             {
                 restOfCommand += " " + arg;
             }
-            log.Debug("Received command: " + searchedCommand->first + restOfCommand);
+
+            std::string remoteIP = socket->remote_endpoint().address().to_string();
+            unsigned short remotePort = socket->remote_endpoint().port();
+
+            log.Debug(remoteIP + ":" + std::to_string(remotePort) + " => " + searchedCommand->first + restOfCommand);
         }
         
         searchedCommand->second(socket, args);
@@ -90,11 +92,6 @@ void VideoStream::ListenForRequests()
                 log.Error("Error while setting up endpoint: " + error.message());
                 return;
             }
-
-            // Get the remote endpoint's IP address and port
-            std::string remoteIP = socket.remote_endpoint().address().to_string();
-            unsigned short remotePort = socket.remote_endpoint().port();
-            log.Debug("Received request from: " + remoteIP + ":" + std::to_string(remotePort));
             
             this->HandleRequest(
                 std::make_shared<asio::ip::tcp::socket>(std::move(socket))
