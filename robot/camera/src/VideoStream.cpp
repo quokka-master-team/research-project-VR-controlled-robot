@@ -73,13 +73,17 @@ void VideoStream::HandleRequest()
         if (!line.empty())
         {
             this->HandleCommand(line);
+            clientSocket.send(asio::buffer("Ok"));
         }
     }
     catch (const std::system_error& e)
     {
-        log.Warning("Bad read: " + std::string(e.what()));
+        auto reason = std::string(e.what());
+
+        log.Warning("Bad character: " + reason);
+        clientSocket.send(asio::buffer("Fail: " + reason));
         
-        //this->command["DISCONNECT"](std::vector<std::string>());
+        this->command["DISCONNECT"](std::vector<std::string>());
     }
 }
 
