@@ -100,6 +100,8 @@ void VideoStream::ListenForRequests()
                 this->HandleRequest(
                     std::make_shared<asio::ip::tcp::socket>(std::move(socket))
                 );
+
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
             }
 
             socket.close();
