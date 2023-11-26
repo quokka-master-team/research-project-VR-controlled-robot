@@ -4,7 +4,7 @@ class Log
 {
 	Log() {
 		spdlog::set_pattern("[%T] [%^%l%$] %v");
-		spdlog::set_level(spdlog::level::info);
+		spdlog::set_level(spdlog::level::debug);
 	}
 
 	~Log() = default;

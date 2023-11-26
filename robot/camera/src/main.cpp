@@ -1,43 +1,14 @@
-﻿#include <unistd.h>
+﻿#include "ConfigReader.hpp"
 #include "VideoStream.hpp"
 
 int main(int argc, char *argv[])
 {
-    auto streamName   = "Test stream";
-    auto serverIp     = "127.0.0.1";
-    auto serverPort   = 8080;
+    ConfigReader configuration("config.yaml");
+    VideoStream stream;
 
-    auto pipeline = "v4l2src device=/dev/video0 ! videoconvert ! autovideosink";
-
-    int opt;
-    while ((opt = getopt(argc, argv, "s:p:P:")) != -1)
+    try
     {
-        switch (opt)
-        {
-            case 's':
-                serverIp = optarg;
-                break;
-            case 'p':
-                serverPort = std::stoi(optarg);
-                break;
-            case 'P':
-                pipeline = optarg;
-                break;
-            default:
-                printf("All possible options:\n");
-                printf("-P <gstreamer_pipeline>: Pipeline settings for camera configuration.\n");
-                printf("-s <server_ip>: IP of the server that requests commands.\n");
-                printf("-p <port>: Port of the server from which requests are sent.\n");
-                return 1;
-        }
-    }
-
-    VideoStream stream(streamName);
-
-    try 
-    {
-        stream.SetPipeline(pipeline);
-        stream.ListenOn(serverIp, serverPort);
+        stream.ListenOn(configuration.getManagementServerIp(), configuration.getManagementPort());
 
         while (stream.IsListening()) 
         {

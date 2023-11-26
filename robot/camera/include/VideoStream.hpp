@@ -1,39 +1,42 @@
+#pragma once
 #include <string>
+#include <functional>
+#include <unordered_map>
 #include <asio.hpp>
 
-#include "VideoStreamManager.hpp"
+#include "GStreamerHandler.hpp"
 
 class VideoStream
 {
-    std::string name;
-    bool isStreaming = false;
-
-    std::unique_ptr<std::thread> streamThread;
-    GstElement* pipeline = nullptr;
-    GMainLoop* streamLoop = nullptr;
+    GStreamerHandler& gstreamer = GStreamerHandler::Get();
+    Log& log = Log::Get();
 
     std::unique_ptr<asio::ip::tcp::acceptor> acceptor;
     std::atomic<bool> listenToClient{false};
-    std::thread clientListener;
+    std::thread listenerThread;
     asio::io_context clientContext;
 
-    VideoStreamManager& manager = VideoStreamManager::Get();
-    Log& log = Log::Get();
+    std::unordered_map<
+        std::string, 
+        std::function<void(
+            std::shared_ptr<asio::ip::tcp::socket>,
+            const std::vector<std::string>&
+        )>
+    > command;
 
-    void ValidatePipeline(GError*& handle);
-    void HandleCommand(const std::string& command);
+    std::string ipAddress;
+    std::string port;
+
+    bool IsArgumentsCountValid(const std::vector<std::string>& arguments, int expected);
+    void HandleCommand(std::shared_ptr<asio::ip::tcp::socket> socket, const std::string& command);
     void HandleRequest(std::shared_ptr<asio::ip::tcp::socket> socket);
     void ListenForRequests();
 
 public:
-    VideoStream(const std::string& name) : name(name)
-    {}
+    VideoStream();
 
-    void SetPipeline(const std::string& str);
     void ListenOn(const std::string& serverIp, unsigned short port);
     bool IsListening();
-    void Start();
-    void Stop();
 
     ~VideoStream();
 };
