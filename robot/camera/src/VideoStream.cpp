@@ -45,8 +45,8 @@ void VideoStream::HandleCommand(const std::string &command)
                 restOfCommand += " " + arg;
             }
 
-            std::string remoteIP = clientSocket.remote_endpoint().address().to_string();
-            unsigned short remotePort = clientSocket.remote_endpoint().port();
+            std::string remoteIP = listener.remote_endpoint().address().to_string();
+            unsigned short remotePort = listener.remote_endpoint().port();
 
             log.Debug(remoteIP + ":" + std::to_string(remotePort) + " => " + searchedCommand->first + restOfCommand);
         }
@@ -64,7 +64,7 @@ void VideoStream::HandleRequest()
     try
     {
         auto buffer = asio::streambuf();
-        asio::read_until(clientSocket, buffer, '\n');
+        asio::read_until(listener, buffer, '\n');
 
         std::istream input(&buffer);
         std::string line;
@@ -73,7 +73,7 @@ void VideoStream::HandleRequest()
         if (!line.empty())
         {
             this->HandleCommand(line);
-            clientSocket.send(asio::buffer("Ok"));
+            listener.send(asio::buffer("Ok"));
         }
     }
     catch (const std::system_error& e)
@@ -81,7 +81,7 @@ void VideoStream::HandleRequest()
         auto reason = std::string(e.what());
 
         log.Warning("Bad character: " + reason);
-        clientSocket.send(asio::buffer("Fail: " + reason));
+        listener.send(asio::buffer("Fail: " + reason));
         
         this->command["DISCONNECT"](std::vector<std::string>());
     }
@@ -89,14 +89,16 @@ void VideoStream::HandleRequest()
 
 void VideoStream::ListenForRequests()
 {
-    clientSocket = acceptor->accept();
+    listener = acceptor->accept();
 
-    while (clientSocket.is_open())
+    while (!this->closeSocketRequest)
     {
         this->HandleRequest();
-
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
+    
+    listener.close();
+    log.Info("Client disconnected!");
 }
 
 VideoStream::VideoStream()
@@ -192,8 +194,7 @@ VideoStream::VideoStream()
 
     this->command["DISCONNECT"] = [this](const std::vector<std::string>&)
     { 
-        log.Info("Client disconnected!");
-        clientSocket.close();
+        this->closeSocketRequest = true;
     };
 }
 
@@ -202,7 +203,7 @@ void VideoStream::ListenOn(const std::string &serverIp, unsigned short port)
     log.Info("Binding to " + serverIp + ":" + std::to_string(port) + "...");
 
     acceptor = std::make_unique<asio::ip::tcp::acceptor>(
-        this->clientContext, asio::ip::tcp::endpoint(asio::ip::make_address(serverIp), port)
+        this->context, asio::ip::tcp::endpoint(asio::ip::make_address(serverIp), port)
     );
 
     this->listenToClient.store(true);
@@ -213,8 +214,8 @@ void VideoStream::ListenOn(const std::string &serverIp, unsigned short port)
             this->ListenForRequests();
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-            this->clientContext.run();
-            this->clientContext.reset();
+            this->context.run();
+            this->context.reset();
         }
     });
 }
@@ -228,7 +229,7 @@ VideoStream::~VideoStream()
 {
     listenToClient.store(false);
 
-    clientContext.stop();
+    context.stop();
 
     if (listenerThread.joinable())
     {
