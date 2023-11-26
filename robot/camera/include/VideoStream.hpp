@@ -26,6 +26,7 @@ class VideoStream
 
     std::string ipAddress;
     std::string port;
+    bool keepListening = false;
 
     bool IsArgumentsCountValid(const std::vector<std::string>& arguments, int expected);
     void HandleCommand(std::shared_ptr<asio::ip::tcp::socket> socket, const std::string& command);

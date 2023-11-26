@@ -87,15 +87,22 @@ void VideoStream::ListenForRequests()
     acceptor->async_accept(
         [this](const asio::error_code& error, asio::ip::tcp::socket socket) 
         {
-            if (error)
+            this->keepListening = true;
+
+            while (this->keepListening)
             {
-                log.Error("Error while setting up endpoint: " + error.message());
-                return;
+                if (error)
+                {
+                    log.Error("Error while setting up endpoint: " + error.message());
+                    this->keepListening = false;
+                }
+                
+                this->HandleRequest(
+                    std::make_shared<asio::ip::tcp::socket>(std::move(socket))
+                );
             }
-            
-            this->HandleRequest(
-                std::make_shared<asio::ip::tcp::socket>(std::move(socket))
-            );
+
+            socket.close();
         }
     );
 }
@@ -127,13 +134,6 @@ VideoStream::VideoStream()
 
     this->command["STOP"] = [this](std::shared_ptr<asio::ip::tcp::socket>, const std::vector<std::string>& args)
     {
-        std::string rest = "";
-        for (auto arg : args)
-        {
-            rest += arg + " ";
-        }
-        log.Debug(rest);
-
         if (gstreamer.IsStreaming())
         {
             gstreamer.Stop();
@@ -200,7 +200,7 @@ VideoStream::VideoStream()
 
     this->command["DISCONNECT"] = [this](std::shared_ptr<asio::ip::tcp::socket> socket, const std::vector<std::string>&)
     {
-        socket->close();
+        this->keepListening = false;
     };
 }
 
