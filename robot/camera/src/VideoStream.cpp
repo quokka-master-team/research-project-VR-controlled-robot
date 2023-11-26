@@ -125,8 +125,15 @@ VideoStream::VideoStream()
         log.Info("Streaming started!");
     };
 
-    this->command["STOP"] = [this](std::shared_ptr<asio::ip::tcp::socket>, const std::vector<std::string>&)
+    this->command["STOP"] = [this](std::shared_ptr<asio::ip::tcp::socket>, const std::vector<std::string>& args)
     {
+        std::string rest = "";
+        for (auto arg : args)
+        {
+            rest += arg + " ";
+        }
+        log.Debug(rest);
+
         if (gstreamer.IsStreaming())
         {
             gstreamer.Stop();
