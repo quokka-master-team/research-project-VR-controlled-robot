@@ -18,19 +18,16 @@ class VideoStream
 
     std::unordered_map<
         std::string, 
-        std::function<void(
-            std::shared_ptr<asio::ip::tcp::socket>,
-            const std::vector<std::string>&
-        )>
+        std::function<void(const std::vector<std::string>&)>
     > command;
 
     std::string ipAddress;
     std::string port;
-    bool keepListening = false;
+    asio::ip::tcp::socket clientSocket = asio::ip::tcp::socket(clientContext);
 
     bool IsArgumentsCountValid(const std::vector<std::string>& arguments, int expected);
-    void HandleCommand(std::shared_ptr<asio::ip::tcp::socket> socket, const std::string& command);
-    void HandleRequest(std::shared_ptr<asio::ip::tcp::socket> socket);
+    void HandleCommand(const std::string& command);
+    void HandleRequest();
     void ListenForRequests();
 
 public:
