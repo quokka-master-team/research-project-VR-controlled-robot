@@ -1,0 +1,11 @@
+---
+- name: "Test "
+  debug: 
+    msg: "Dziala"
+- name: Include task list in play
+  ansible.builtin.include_tasks: basic_config.yml
+  tags:
+    - users
+    - packages
+    - ssh
+    - bashrc

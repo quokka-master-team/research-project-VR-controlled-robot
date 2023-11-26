@@ -1,0 +1,24 @@
+---
+- name: Playbook which runs some configuration of server
+  gather_facts: no
+  hosts: all
+  roles:
+    - name: os_config
+      vars: 
+        users: 
+          - name: lszarecki
+            state: present
+          - name: jkoniuszewski
+            state: present
+          - name: devuser
+            state: present
+        packages:
+          - tree
+          - wireguard
+          - resolvconf
+          - traceroute
+          - nftables
+    - name: wireguard
+      become: yes
+    - name: services
+      become: yes

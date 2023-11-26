@@ -1,0 +1,25 @@
+---
+
+- name: "Set up udp_streaming service"
+  ansible.builtin.template:
+    dest: "{{ systemd_dir }}/udp_streaming.service"
+    src: "udp_streaming.service.j2"
+    owner: root
+    group: root
+    mode: '0644'
+  tags:
+    - udp_streaming
+
+- name: "Force systemd to reread configs"
+  ansible.builtin.systemd:
+    daemon_reload: true
+  tags:
+    - udp_streaming
+
+- name: "Enable and start the service"
+  ansible.builtin.systemd:
+    name: udp_streaming.service
+    state: started
+    enabled: true
+  tags:
+    - udp_streaming

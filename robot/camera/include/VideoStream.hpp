@@ -29,6 +29,7 @@ class VideoStream
     bool IsArgumentsCountValid(const std::vector<std::string>& arguments, int expected);
     void HandleCommand(const std::string& command);
     void HandleRequest();
+
     void ListenForRequests();
 
 public:

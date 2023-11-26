@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# Generate WireGuard private key
+private_key=$(wg genkey)
+
+# Generate WireGuard public key
+public_key=$(echo "$private_key" | wg pubkey)
+
+# Save private key to a file
+echo "$private_key" | sudo tee {{ private_key_path }} > /dev/null
+
+# Save public key to a file
+echo "$public_key" | sudo tee {{ public_key_path }} > /dev/null

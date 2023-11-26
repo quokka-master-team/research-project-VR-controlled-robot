@@ -1,4 +1,4 @@
-from src.user_management.users.domain.ports import UserUnitOfWorkInterface
+from src.user_management.users.domain.ports import UserUowInterface
 from uuid import UUID
 from src.user_management.users.domain.dtos import UserDto
 from src.core.types import Email
@@ -13,19 +13,19 @@ from src.user_management.permissions.domain.exceptions import RoleNotFound
 class UserService:
     """Responsible for operations in user domain"""
 
-    def __init__(self, uow: UserUnitOfWorkInterface) -> None:
+    def __init__(self, uow: UserUowInterface) -> None:
         self._uow = uow
 
     def get_user(self, user_id: UUID) -> UserDto:
-        with self._uow:
-            if user := self._uow.user_repository.get_user(user_id):
+        with self._uow as uow:
+            if user := uow.user_repository.get_user(user_id):
                 return user
 
             raise UserNotFound
 
     def verify_or_create_user(self, iam_id: str, email: Email) -> UserDto:
-        with self._uow:
-            if user := self._uow.user_repository.get_user_by_iam_id(iam_id):
+        with self._uow as uow:
+            if user := uow.user_repository.get_user_by_iam_id(iam_id):
                 if user.email != email:
                     raise EmailMismatch
 

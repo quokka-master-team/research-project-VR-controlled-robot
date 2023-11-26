@@ -14,5 +14,9 @@ RUN apk --update add  \
     libffi-dev  \
     postgresql-client
 
+RUN set -ex \
+    && wget "https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh" -O /usr/bin/wait-for-it \
+    && chmod +x /usr/bin/wait-for-it
+
 RUN pip install -r /tmp/requirements/base.txt
 RUN pip install -r /tmp/requirements/lint.txt

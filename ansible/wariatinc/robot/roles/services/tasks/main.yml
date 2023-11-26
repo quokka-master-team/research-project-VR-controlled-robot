@@ -1,0 +1,11 @@
+---
+
+- name: "Include task in play"
+  ansible.builtin.include_tasks: udp_streaming.yml
+  tags:
+    - udp_streaming
+
+- name: "Include task in play"
+  ansible.builtin.include_tasks: ngrok.yml
+  tags:
+    - ngrok
