@@ -61,14 +61,26 @@ void VideoStream::HandleCommand(const std::string &command)
 
 void VideoStream::HandleRequest()
 {
-    auto buffer = asio::streambuf();
-    asio::read(clientSocket, buffer);
+    try
+    {
+        auto buffer = asio::streambuf();
+        asio::read_until(clientSocket, buffer, '\n');
 
-    std::istream input(&buffer);
-    std::string line;
-    std::getline(input, line);
+        std::istream input(&buffer);
+        std::string line;
+        std::getline(input, line);
 
-    this->HandleCommand(line);
+        if (!line.empty())
+        {
+            this->HandleCommand(line);
+        }
+    }
+    catch (const std::system_error& e)
+    {
+        log.Error("Error: " + std::string(e.what()));
+        
+        this->command["DISCONNECT"](std::vector<std::string>());
+    }
 }
 
 void VideoStream::ListenForRequests()
@@ -176,6 +188,7 @@ VideoStream::VideoStream()
 
     this->command["DISCONNECT"] = [this](const std::vector<std::string>&)
     { 
+        log.Info("Client disconnected!");
         clientSocket.close();
     };
 }
