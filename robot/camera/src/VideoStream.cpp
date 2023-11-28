@@ -91,6 +91,7 @@ void VideoStream::ListenForRequests()
 {
     listener = acceptor->accept();
 
+    this->closeSocketRequest = false;
     while (!this->closeSocketRequest)
     {
         this->HandleRequest();
