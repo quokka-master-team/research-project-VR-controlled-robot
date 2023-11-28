@@ -10,7 +10,9 @@ class StreamUnit(Model):
     __table_args__ = (
         sqla.PrimaryKeyConstraint("id", name="stream_unit_pkey"),
         sqla.UniqueConstraint("name", name="stream_unit_name_uniq"),
-        sqla.UniqueConstraint("host", "port", name="stream_unit_host_port_uniq"),
+        sqla.UniqueConstraint(
+            "host", "port", name="stream_unit_host_port_uniq"
+        ),
         sqla.UniqueConstraint("api_url", name="stream_unit_api_uri_uniq"),
     )
 

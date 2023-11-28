@@ -1,7 +1,6 @@
-from fastapi import WebSocket
-from typing import Protocol, Self, Any
+from typing import Protocol, Self, Any, AsyncIterable
 from uuid import UUID
-
+from fastapi import WebSocket
 from src.core.types import URL
 from src.stream.domain.value_objects import StreamUnitName, StreamUnitLocation
 from src.stream.domain.dtos import (
@@ -91,6 +90,11 @@ class StreamUnitUowInterface(Protocol):
 
 
 class StreamingServiceInterface(Protocol):
+    async def bind_stream_unit_with_actor(
+        self, actor: Actor, stream_unit_id: UUID
+    ) -> None:
+        ...
+
     async def start(
         self, token: str, stream_unit_id: UUID, websocket: WebSocket
     ) -> None:

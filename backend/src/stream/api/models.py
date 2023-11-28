@@ -2,7 +2,6 @@ from uuid import UUID
 from pydantic import BaseModel, field_validator
 from src.stream.domain.value_objects import StreamUnitName, StreamUnitLocation
 from src.core.api.models import ResponseModel
-from src.core.types import URL
 
 
 class PostStreamUnit(BaseModel):

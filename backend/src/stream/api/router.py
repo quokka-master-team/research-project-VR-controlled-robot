@@ -12,12 +12,15 @@ from src.stream.api.models import PostStreamUnit, StreamUnit
 from src.stream.api.exceptions import (
     STREAM_UNIT_ALREADY_EXIST,
     STREAM_UNIT_NOT_FOUND,
+    STREAM_UNIT_IN_USE,
 )
 from src.stream.domain.exceptions import (
     InsufficientPermissionsToAddStreamUnit,
     StreamUnitAlreadyExists,
     InsufficientPermissionsToGetStreamUnits,
     StreamUnitNotFound,
+    InsufficientPermissionsToStartTransmission,
+    StreamUnitInUse,
 )
 from src.auth.authentication import get_authenticated_user
 from src.core.api.exceptions import UNAUTHORIZED, FORBIDDEN
@@ -148,4 +151,5 @@ async def streaming(
         Depends(lambda: di[StreamingServiceInterface]),
     ],
 ) -> None:
+    await websocket.accept()
     await streaming_service.start(token, stream_unit_id, websocket)

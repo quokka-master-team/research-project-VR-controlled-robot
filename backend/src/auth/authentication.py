@@ -30,7 +30,7 @@ def get_authenticated_user(
     except (
         EmailMismatch,
         InvalidToken,
-    ) as ex:
+    ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=ApiErrors.unauthorized,

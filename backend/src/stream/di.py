@@ -19,6 +19,7 @@ from src.stream.application.utils import (
     ConnectionManager,
     InMemoryConnectionManager,
 )
+from src.config import Settings
 from src.user_management.permissions.domain.ports import PermissionValidator
 from src.stream.infrastructure.views import StreamUnitView, StreamUnitListView
 from src.auth.ports import IAMTokenVerificationService
@@ -60,5 +61,6 @@ class StreamModule(Module):
             cls.container[StreamUnitUowInterface],  # type: ignore
             cls.container[ConnectionManager],  # type: ignore
             cls.container[PermissionValidator],  # type: ignore
-            cls.container[IAMTokenVerificationService],  # type: ignore
+            cls.container[IAMTokenVerificationService], # type: ignore
+            cls.container[Settings],
         )

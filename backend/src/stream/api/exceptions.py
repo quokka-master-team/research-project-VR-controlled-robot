@@ -8,3 +8,7 @@ STREAM_UNIT_NOT_FOUND = HTTPException(
 STREAM_UNIT_ALREADY_EXIST = HTTPException(
     status.HTTP_400_BAD_REQUEST, Errors.stream_unit_already_exists
 )
+
+STREAM_UNIT_IN_USE = HTTPException(
+    status.HTTP_400_BAD_REQUEST, Errors.stream_unit_in_use
+)

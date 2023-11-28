@@ -54,7 +54,9 @@ class StreamUnitRepository:
                 sqla.or_(
                     StreamUnit.name == name,
                     StreamUnit.api_url == str(api_url),
-                    sqla.and_(StreamUnit.port == port, StreamUnit.host == host)
+                    sqla.and_(
+                        StreamUnit.port == port, StreamUnit.host == host
+                    ),
                 )
             )
         ).scalar()
