@@ -55,49 +55,49 @@
   tags:
     - apps.install.python
 
-- name: Check if alias exists
-  ansible.builtin.shell:
-    cmd: "grep -q 'alias python='python3'' ~/.bashrc"
-  register: alias_check
-  ignore_errors: true
-  tags:
-    - apps.install.python
+# - name: Check if alias exists
+#   ansible.builtin.shell:
+#     cmd: "grep -q 'alias python='python3'' ~/.bashrc"
+#   register: alias_check
+#   ignore_errors: true
+#   tags:
+#     - apps.install.python
 
-- name: Add alias to shell profile
-  ansible.builtin.lineinfile:
-    path: "~/.bashrc"
-    line: "alias python='python3'"
-    insertafter: EOF
-  when: not alias_check.rc | default(0) == 0
-  tags:
-    - apps.install.python
+# - name: Add alias to shell profile
+#   ansible.builtin.lineinfile:
+#     path: "~/.bashrc"
+#     line: "alias python='python3'"
+#     insertafter: EOF
+#   when: not alias_check.rc | default(0) == 0
+#   tags:
+#     - apps.install.python
 
-- name: Source the shell profile
-  ansible.builtin.shell: "bash -c 'source ~/.bashrc'"
-  tags:
-    - apps.install.python
+# - name: Source the shell profile
+#   ansible.builtin.shell: "bash -c 'source ~/.bashrc'"
+#   tags:
+#     - apps.install.python
 
-- name: Check if alias exists
-  become_user: devuser
-  ansible.builtin.shell:
-    cmd: "grep -q 'alias python='python3'' ~/.bashrc"
-  register: alias_check_devuser
-  ignore_errors: true
-  tags:
-    - apps.install.python
+# - name: Check if alias exists
+#   become_user: devuser
+#   ansible.builtin.shell:
+#     cmd: "grep -q 'alias python='python3'' ~/.bashrc"
+#   register: alias_check_devuser
+#   ignore_errors: true
+#   tags:
+#     - apps.install.python
 
-- name: Add alias to shell profile
-  become_user: devuser
-  ansible.builtin.lineinfile:
-    path: "~/.bashrc"
-    line: "alias python='python3'"
-    insertafter: EOF
-  when: not alias_check_devuser.rc | default(0) == 0
-  tags:
-    - apps.install.python
+# - name: Add alias to shell profile
+#   become_user: devuser
+#   ansible.builtin.lineinfile:
+#     path: "~/.bashrc"
+#     line: "alias python='python3'"
+#     insertafter: EOF
+#   when: not alias_check_devuser.rc | default(0) == 0
+#   tags:
+#     - apps.install.python
 
-- name: Source the shell profile
-  become_user: devuser
-  ansible.builtin.shell: "bash -c 'source ~/.bashrc'"
-  tags:
-    - apps.install.python
+# - name: Source the shell profile
+#   become_user: devuser
+#   ansible.builtin.shell: "bash -c 'source ~/.bashrc'"
+#   tags:
+#     - apps.install.python
