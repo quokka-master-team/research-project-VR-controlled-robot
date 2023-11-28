@@ -52,6 +52,11 @@ table inet filter {
          # Allow all traffic from docker0 to ens3
         iifname "docker0" oifname $pub_iface counter accept
 
+        # Allow all traffic from wg0 to docker0
+        iifname $wg_iface oifname "docker0" counter accept
+         # Allow all traffic from docker0 to wg0
+        iifname "docker0" oifname $wg_iface counter accept
+
         # reject with polite "host unreachable" icmp response
         reject with icmpx type host-unreachable
     }
