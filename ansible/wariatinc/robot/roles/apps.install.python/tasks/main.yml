@@ -1,0 +1,6 @@
+---
+
+- name: "Include task in play"
+  ansible.builtin.include_tasks: apps.install.python.yml
+  tags:
+    - apps.install.python
