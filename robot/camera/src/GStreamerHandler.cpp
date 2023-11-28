@@ -19,7 +19,39 @@ GStreamerHandler::~GStreamerHandler()
     log.Info("Goodbye! (~˘▾˘)~");
 }
 
-bool GStreamerHandler::IsPipelineValid(GstElement* pipeline, GError *&handle)
+gboolean GStreamerHandler::BusCallback(GstBus *bus, GstMessage *msg, gpointer data)
+{
+    auto handler = static_cast<GStreamerHandler*>(data);
+
+    switch (GST_MESSAGE_TYPE(msg))
+    {
+        case GST_MESSAGE_ERROR: 
+            GError *err;
+            gchar *debug;
+
+            gst_message_parse_error(msg, &err, &debug);
+            handler->log.Error("GStreamer: " + std::string(err->message));
+
+            g_error_free(err);
+            g_free(debug);
+
+            handler->Stop();
+            break;
+
+        case GST_MESSAGE_EOS:
+            handler->log.Info("GStreamer: End of stream");
+            
+            handler->Stop();
+            break;
+
+        default:
+            break;
+    }
+
+    return TRUE;
+}
+
+bool GStreamerHandler::IsPipelineValid(GstElement *pipeline, GError *&handle)
 {
     if (handle)
     {
@@ -99,9 +131,14 @@ void GStreamerHandler::Start()
         return;
     }
 
+    auto bus = gst_pipeline_get_bus(GST_PIPELINE(this->pipeline));
+    gst_bus_add_watch(bus, this->BusCallback, this);
+    gst_object_unref(bus);
+
     if (gst_element_set_state(this->pipeline, GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE)
     {
-        throw std::runtime_error("Failed to start pipeline!");
+        log.Error("Failed to start pipeline!");
+        return;
     }
 
     this->streamLoop = g_main_loop_new(NULL, FALSE);
