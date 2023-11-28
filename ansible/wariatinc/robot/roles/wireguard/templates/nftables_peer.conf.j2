@@ -16,8 +16,9 @@ table inet filter {
         # accept all DHCPv6 packets received at a link-local address
         ip6 daddr fe80::/64 udp dport dhcpv6-client accept
         # accept all SSH, http, https, xrdp, wireguard packets 
-        tcp dport {http,https, {{ tcp_peer_ports }} } accept
-        udp dport {51820, {{ udp_peer_ports }} } accept
+        tcp dport {http,https, {{ tcp_peer_ports }}, {{ peer_in_ports.tcp | join(',')}} } accept
+        udp dport {51820, {{ udp_peer_ports }}, {{ peer_in_ports.udp | join(',') }} } accept
+
         
     }
 

@@ -18,6 +18,9 @@
           - resolvconf
           - traceroute
           - nftables
+          - nautilus  # xrdp gui, open folders
+          - xfce4-terminal  # xrdp gui, open folders
+          - gnome-tweak-tool  # xrdp gui, open folders
     - name: wireguard
       become: yes
 

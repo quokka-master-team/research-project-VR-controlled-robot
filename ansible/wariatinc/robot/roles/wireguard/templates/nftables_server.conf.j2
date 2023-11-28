@@ -22,7 +22,10 @@ table inet filter {
         # accept all SSH packets received on a public interface
         iifname $pub_iface tcp dport ssh accept
         # accept all WireGuard packets received on a public interface
-        iifname $pub_iface udp dport $wg_port accept
+        iifname $pub_iface udp dport $wg_port counter accept
+        iifname $pub_iface tcp dport {8001, 8002} counter accept 
+        iifname $wg_iface udp dport { {{ server_in_ports.udp | join(',') }} } counter accept
+        iifname $wg_iface tcp dport { {{ server_in_ports.tcp | join(',') }} } counter accept
         # reject with polite "port unreachable" icmp response
 
         # akceptowanie polaczen na serwer OVH - lokalnie
@@ -35,15 +38,19 @@ table inet filter {
 
     chain forward {
         type filter hook forward priority 0; policy drop;
-
+        
         # forward all packets that are part of an already-established connection
         ct state vmap { invalid : drop, established : accept, related : accept }
         # forward any incoming packets from a public interface that will go out through WireGuard
-        # iifname $pub_iface oifname $wg_iface accept
         iifname $wg_iface oifname $pub_iface accept
 
         iifname $pub_iface tcp dport { {{ tcp_peer_ports }} } accept
         iifname $pub_iface udp dport { {{ udp_peer_ports }} } accept
+
+        # Allow all traffic from ens3 to docker0
+        iifname $pub_iface oifname "docker0" counter accept
+         # Allow all traffic from docker0 to ens3
+        iifname "docker0" oifname $pub_iface counter accept
 
         # reject with polite "host unreachable" icmp response
         reject with icmpx type host-unreachable
