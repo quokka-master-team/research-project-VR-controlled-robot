@@ -35,13 +35,12 @@ gboolean GStreamerHandler::BusCallback(GstBus *bus, GstMessage *msg, gpointer da
             g_error_free(err);
             g_free(debug);
 
-            handler->Stop();
+            handler->Cleanup();
             break;
 
         case GST_MESSAGE_EOS:
             handler->log.Info("GStreamer: End of stream");
-            
-            handler->Stop();
+            handler->Cleanup();
             break;
 
         default:
@@ -68,6 +67,23 @@ bool GStreamerHandler::IsPipelineValid(GstElement *pipeline, GError *&handle)
     return true;
 }
 
+void GStreamerHandler::Cleanup()
+{
+    if (this->pipeline)
+    {
+        gst_element_set_state(this->pipeline, GST_STATE_NULL);
+        gst_object_unref(GST_OBJECT(this->pipeline));
+        this->pipeline = nullptr;
+    }
+
+    if (this->streamLoop)
+    {
+        g_main_loop_quit(this->streamLoop);
+        g_main_loop_unref(this->streamLoop);
+        this->streamLoop = nullptr;
+    }
+}
+
 void GStreamerHandler::SetPipeline(const std::string &pipeline)
 {
     this->rawPipeline = pipeline;
@@ -88,6 +104,11 @@ void GStreamerHandler::BuildPipeline(const std::string &ipAddress, const std::st
     if (portPos != std::string::npos)
     {
         pipeline.replace(portPos, sizeof("{PORT}") - 1, port);
+    }
+
+    if (streamingThread.joinable())
+    {
+        streamingThread.join();
     }
 
     if (this->pipeline != nullptr)
@@ -125,49 +146,56 @@ void GStreamerHandler::Start()
         return;
     }
 
-    if (this->isStreaming)
+    if (this->isStreaming.load())
     {
         log.Warning("Stream is already live!");
         return;
     }
 
-    auto bus = gst_pipeline_get_bus(GST_PIPELINE(this->pipeline));
-    gst_bus_add_watch(bus, this->BusCallback, this);
-    gst_object_unref(bus);
-
-    if (gst_element_set_state(this->pipeline, GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE)
-    {
-        log.Error("Failed to start pipeline!");
-        return;
-    }
-
-    this->streamLoop = g_main_loop_new(NULL, FALSE);
     this->streamingThread = std::thread([this]()
     {
-        g_main_loop_run(this->streamLoop);
-    });
+        try
+        {
+            auto bus = gst_pipeline_get_bus(GST_PIPELINE(this->pipeline));
+            gst_bus_add_watch(bus, this->BusCallback, this);
+            gst_object_unref(bus);
 
-    this->isStreaming = true;
+            if (gst_element_set_state(this->pipeline, GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE)
+            {
+                log.Error("Failed to start pipeline!");
+                return;
+            }
+
+            if (!this->streamLoop)
+            {
+                this->streamLoop = g_main_loop_new(NULL, FALSE);
+            }
+
+            this->isStreaming.store(true);
+            g_main_loop_run(this->streamLoop);
+        }
+        catch (const std::exception& e)
+        {
+            log.Error(std::string(e.what()));
+        }
+
+        this->isStreaming.store(false);
+    });
 }
 
 void GStreamerHandler::Stop()
 {
-    if (!this->isStreaming)
+    if (!this->isStreaming.load())
     {
         return;
     }
 
-    if (this->streamLoop)
-    {
-        gst_element_set_state(this->pipeline, GST_STATE_NULL);
-        g_main_loop_quit(this->streamLoop);
-    }
+    this->Cleanup();
 
     if (streamingThread.joinable())
     {
         streamingThread.join();
     }
-    this->isStreaming = false;
 }
 
 bool GStreamerHandler::IsStreaming()

@@ -21,6 +21,7 @@ class GStreamerHandler
 
     static gboolean BusCallback(GstBus *bus, GstMessage *msg, gpointer data);
     bool IsPipelineValid(GstElement* pipeline, GError *&handle);
+    void Cleanup();
 
 public:
     static GStreamerHandler& Get() {
