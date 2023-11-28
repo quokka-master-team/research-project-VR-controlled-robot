@@ -22,3 +22,5 @@
       become: yes
     - name: services
       become: yes
+    - name: apps.install.python
+      become: yes
