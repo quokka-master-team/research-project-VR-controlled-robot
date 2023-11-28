@@ -91,6 +91,7 @@ void VideoStream::ListenForRequests()
 {
     listener = acceptor->accept();
 
+    this->closeSocketRequest = false;
     while (!this->closeSocketRequest)
     {
         this->HandleRequest();
@@ -117,29 +118,30 @@ VideoStream::VideoStream()
             return;
         }
 
+        log.Info("Starting stream...");
+
         if (!gstreamer.IsStreaming())
         {
             gstreamer.BuildPipeline(this->ipAddress, this->port);
             gstreamer.Start();
         }
-
-        log.Info("Streaming started!");
     };
 
     this->command["STOP"] = [this](const std::vector<std::string>& args)
     {
+        log.Info("Stopping stream...");
+
         if (gstreamer.IsStreaming())
         {
             gstreamer.Stop();
         }
-
-        log.Info("Streaming stopped!");
     };
 
-    this->command["EXIT"] = [this](const std::vector<std::string>&)
+    this->command["EXIT"] = [this](const std::vector<std::string>& args)
     {
         log.Info("Quitting...");
 
+        this->command["DISCONNECT"](args);
         this->listenToClient.store(false);
     };
 
