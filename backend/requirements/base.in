@@ -12,3 +12,5 @@ httpx
 itsdangerous
 pyjwt
 websockets
+Flask==3.0.0
+PyGObject==3.46.0
