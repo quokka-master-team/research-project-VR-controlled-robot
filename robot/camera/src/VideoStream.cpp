@@ -20,7 +20,7 @@ bool VideoStream::IsArgumentsCountValid(const std::vector<std::string> &argument
     return true;
 }
 
-void VideoStream::HandleCommand(std::shared_ptr<asio::ip::tcp::socket> socket, const std::string &command)
+void VideoStream::HandleCommand(const std::string &command)
 {
     auto commandText = std::istringstream(command);
     auto tokens = std::vector<std::string>
@@ -36,7 +36,22 @@ void VideoStream::HandleCommand(std::shared_ptr<asio::ip::tcp::socket> socket, c
     if (searchedCommand != this->command.end())
     {
         auto args = std::vector<std::string>(tokens.begin() + 1, tokens.end());
-        searchedCommand->second(socket, args);
+        
+        if (log.IsDebugOn())
+        {
+            std::string restOfCommand;
+            for (auto arg : args)
+            {
+                restOfCommand += " " + arg;
+            }
+
+            std::string remoteIP = listener.remote_endpoint().address().to_string();
+            unsigned short remotePort = listener.remote_endpoint().port();
+
+            log.Debug(remoteIP + ":" + std::to_string(remotePort) + " => " + searchedCommand->first + restOfCommand);
+        }
+        
+        searchedCommand->second(args);
     }
     else
     {
@@ -44,57 +59,51 @@ void VideoStream::HandleCommand(std::shared_ptr<asio::ip::tcp::socket> socket, c
     }
 }
 
-void VideoStream::HandleRequest(std::shared_ptr<asio::ip::tcp::socket> socket)
+void VideoStream::HandleRequest()
 {
-    auto buffer = std::make_shared<asio::streambuf>();
-    asio::async_read_until(*socket, *buffer, "\n", 
-        [this, buffer, socket](const asio::error_code& error, size_t)
+    try
+    {
+        auto buffer = asio::streambuf();
+        asio::read_until(listener, buffer, '\n');
+
+        std::istream input(&buffer);
+        std::string line;
+        std::getline(input, line);
+
+        if (!line.empty())
         {
-            if (error)
-            {
-                log.Error("Error while retreiving client message: " + error.message());
-                socket->close();
-
-                return;
-            }
-
-            std::istream input(buffer.get());
-            std::string line;
-            std::getline(input, line);
-
-            this->HandleCommand(socket, line);
-            
-            socket->close();
+            this->HandleCommand(line);
+            listener.send(asio::buffer("Ok"));
         }
-    );
+    }
+    catch (const std::system_error& e)
+    {
+        auto reason = std::string(e.what());
+
+        log.Warning("Bad character: " + reason);
+        listener.send(asio::buffer("Fail: " + reason));
+        
+        this->command["DISCONNECT"](std::vector<std::string>());
+    }
 }
 
 void VideoStream::ListenForRequests()
 {
-    acceptor->async_accept(
-        [this](const asio::error_code& error, asio::ip::tcp::socket socket) 
-        {
-            if (error)
-            {
-                log.Error("Error while setting up endpoint: " + error.message());
-                return;
-            }
+    listener = acceptor->accept();
 
-            // Get the remote endpoint's IP address and port
-            std::string remoteIP = socket.remote_endpoint().address().to_string();
-            unsigned short remotePort = socket.remote_endpoint().port();
-            log.Debug("Received request from: " + remoteIP + ":" + std::to_string(remotePort));
-            
-            this->HandleRequest(
-                std::make_shared<asio::ip::tcp::socket>(std::move(socket))
-            );
-        }
-    );
+    while (!this->closeSocketRequest)
+    {
+        this->HandleRequest();
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+    
+    listener.close();
+    log.Info("Client disconnected!");
 }
 
 VideoStream::VideoStream()
 {
-    this->command["START"] = [this](std::shared_ptr<asio::ip::tcp::socket>, const std::vector<std::string>&)
+    this->command["START"] = [this](const std::vector<std::string>&)
     {
         if (this->ipAddress.empty())
         {
@@ -117,7 +126,7 @@ VideoStream::VideoStream()
         log.Info("Streaming started!");
     };
 
-    this->command["STOP"] = [this](std::shared_ptr<asio::ip::tcp::socket>, const std::vector<std::string>&)
+    this->command["STOP"] = [this](const std::vector<std::string>& args)
     {
         if (gstreamer.IsStreaming())
         {
@@ -127,14 +136,14 @@ VideoStream::VideoStream()
         log.Info("Streaming stopped!");
     };
 
-    this->command["EXIT"] = [this](std::shared_ptr<asio::ip::tcp::socket>, const std::vector<std::string>&)
+    this->command["EXIT"] = [this](const std::vector<std::string>&)
     {
         log.Info("Quitting...");
 
         this->listenToClient.store(false);
     };
 
-    this->command["SET"] = [this](std::shared_ptr<asio::ip::tcp::socket>, const std::vector<std::string>& args)
+    this->command["SET"] = [this](const std::vector<std::string>& args)
     {
         if (!this->IsArgumentsCountValid(args, 2))
         {
@@ -157,7 +166,7 @@ VideoStream::VideoStream()
         }
     };
 
-    this->command["USE"] = [this](std::shared_ptr<asio::ip::tcp::socket>, const std::vector<std::string>& args)
+    this->command["USE"] = [this](const std::vector<std::string>& args)
     {
         if (args.empty())
         {
@@ -183,44 +192,9 @@ VideoStream::VideoStream()
         }
     };
 
-    command["HANDSHAKE"] = [this](std::shared_ptr<asio::ip::tcp::socket> socket, const std::vector<std::string>&)
-    {
-        gstreamer.Stop();
-
-        asio::ip::udp::socket udp_socket(clientContext, asio::ip::udp::endpoint(asio::ip::udp::v4(), 5022));
-        std::array<char, 1024> recv_buf;
-        asio::ip::udp::endpoint sender_endpoint;
-
-        // Code smell - potentially if client would disconnect then we're stuck
-        std::error_code ec;
-        std::size_t length = udp_socket.receive_from(asio::buffer(recv_buf), sender_endpoint, 0, ec);
-
-        if (!ec && length > 0)
-        {
-            log.Info("Received UDP message from " + sender_endpoint.address().to_string() + ":" + std::to_string(sender_endpoint.port()));
-        }
-        else
-        {
-            log.Error("Error receiving UDP message: " + ec.message());
-        }
-
-        std::string serverIP = sender_endpoint.address().to_string();
-        unsigned short serverPort = sender_endpoint.port();
-
-        std::string response = std::to_string(serverPort);
-        this->port = serverPort;
-
-        asio::async_write(*socket, asio::buffer(response), 
-            [this, socket](const asio::error_code& error, std::size_t)
-            {
-                if (error)
-                {
-                    log.Error("Error sending HANDSHAKE response: " + error.message());
-                }
-
-                socket->close();
-            }
-        );
+    this->command["DISCONNECT"] = [this](const std::vector<std::string>&)
+    { 
+        this->closeSocketRequest = true;
     };
 }
 
@@ -229,7 +203,7 @@ void VideoStream::ListenOn(const std::string &serverIp, unsigned short port)
     log.Info("Binding to " + serverIp + ":" + std::to_string(port) + "...");
 
     acceptor = std::make_unique<asio::ip::tcp::acceptor>(
-        this->clientContext, asio::ip::tcp::endpoint(asio::ip::make_address(serverIp), port)
+        this->context, asio::ip::tcp::endpoint(asio::ip::make_address(serverIp), port)
     );
 
     this->listenToClient.store(true);
@@ -240,8 +214,8 @@ void VideoStream::ListenOn(const std::string &serverIp, unsigned short port)
             this->ListenForRequests();
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-            this->clientContext.run();
-            this->clientContext.reset();
+            this->context.run();
+            this->context.reset();
         }
     });
 }
@@ -255,7 +229,7 @@ VideoStream::~VideoStream()
 {
     listenToClient.store(false);
 
-    clientContext.stop();
+    context.stop();
 
     if (listenerThread.joinable())
     {

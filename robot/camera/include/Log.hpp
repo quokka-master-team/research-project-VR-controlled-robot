@@ -22,6 +22,11 @@ public:
 		return instance;
 	}
 
+	inline bool IsDebugOn() const
+	{
+		return true; //spdlog::level::debug == spdlog::get_level();
+	}
+
 	inline void Debug(const std::string& message) const
 	{
 		spdlog::debug(message);
