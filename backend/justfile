@@ -26,7 +26,7 @@ default:
     just --list --list-heading $'Available commands\n'
 
 create-venv:
-    python3 -m venv venv
+    python -m venv venv
     {{PIP}} install --upgrade pip
     {{PIP}} install pip-tools
 
