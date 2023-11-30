@@ -4,7 +4,7 @@
 #
 #    pip-compile ./requirements/lint.in
 #
-black==23.9.1
+black==23.11.0
     # via -r ./requirements/lint.in
 click==8.1.7
     # via black
@@ -22,7 +22,7 @@ packaging==23.2
     # via black
 pathspec==0.11.2
     # via black
-platformdirs==3.11.0
+platformdirs==4.0.0
     # via black
 pycodestyle==2.11.1
     # via flake8
