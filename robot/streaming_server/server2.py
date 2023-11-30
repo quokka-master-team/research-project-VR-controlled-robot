@@ -91,7 +91,7 @@ class Server:
         self.robot_controller.lose_connection()
 
 if __name__ == "__main__":
-    # Create an instance of the Server class with your desired IP and port
+    # Create an instance of the Server class with desired IP and port
     server_instance = Server(ip='10.0.0.9', port=5001)
 
     # Start the server
