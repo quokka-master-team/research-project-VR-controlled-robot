@@ -118,22 +118,28 @@ VideoStream::VideoStream()
             return;
         }
 
-        log.Info("Starting stream...");
-
         if (!gstreamer.IsStreaming())
         {
+            log.Info("Starting stream...");
             gstreamer.BuildPipeline(this->ipAddress, this->port);
             gstreamer.Start();
+        }
+        else
+        {
+            log.Info("Stream is live already. Stop it to run again.");
         }
     };
 
     this->command["STOP"] = [this](const std::vector<std::string>& args)
     {
-        log.Info("Stopping stream...");
-
         if (gstreamer.IsStreaming())
         {
+            log.Info("Stopping stream...");
             gstreamer.Stop();
+        }
+        else
+        {
+            log.Info("Stream wasn't live.");
         }
     };
 
