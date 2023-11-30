@@ -17,7 +17,8 @@ table inet filter {
         # accept all packets that are part of an already-established connection
         ct state vmap { invalid : drop, established : accept, related : accept }
         # drop new connections over rate limit, protect before DDOS attack
-        ct state new limit rate over 100/second burst 10 packets drop
+        # 
+        ct state new limit rate over 500000/second burst 100 packets drop
         # accept all DHCPv6 packets received at a link-local address
         ip6 daddr fe80::/64 udp dport dhcpv6-client accept
         # accept all SSH packets received on a public interface
