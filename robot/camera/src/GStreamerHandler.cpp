@@ -10,6 +10,11 @@ GStreamerHandler::~GStreamerHandler()
 {
     this->Stop();
 
+    if (streamingThread.joinable())
+    {
+        streamingThread.join();
+    }
+
     if (this->streamLoop)
     {
         g_main_loop_unref(this->streamLoop);
