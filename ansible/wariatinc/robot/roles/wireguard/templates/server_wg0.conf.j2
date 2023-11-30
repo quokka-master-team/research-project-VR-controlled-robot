@@ -8,3 +8,12 @@ PrivateKey = {{ private_key }}
 [Peer]
 PublicKey = {{ wireguard_peer_pubkey }}
 AllowedIPs = {{ wireguard_peer_ipv4 }}
+
+# Other peers to wireguard tunnel
+{% for peer_name, peer_info in wireguard_extra_peers.items() %}
+[Peer]
+# {{ peer_name }}
+PublicKey = {{ peer_info['public_key'] }}
+AllowedIPs = {{ peer_info['ip'] }}/32
+
+{% endfor %}

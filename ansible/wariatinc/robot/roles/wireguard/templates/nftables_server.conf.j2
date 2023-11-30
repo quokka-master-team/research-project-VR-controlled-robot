@@ -4,6 +4,7 @@ flush ruleset
 define pub_iface = {{ public_iface }}
 define wg_iface = {{ wireguard_iface }}
 define wg_port = 51820
+define docker_subnet = 172.17.0.0/24
 
 table inet filter {
     chain input {
@@ -47,15 +48,18 @@ table inet filter {
         iifname $pub_iface tcp dport { {{ tcp_peer_ports }} } accept
         iifname $pub_iface udp dport { {{ udp_peer_ports }} } accept
 
-        # Allow all traffic from ens3 to docker0
-        iifname $pub_iface oifname "docker0" counter accept
+        # Allow all traffic from ens3 to docker_subnet
+        iifname $pub_iface ip daddr $docker_subnet counter accept
          # Allow all traffic from docker0 to ens3
-        iifname "docker0" oifname $pub_iface counter accept
+        ip saddr $docker_subnet oifname $pub_iface counter accept
 
         # Allow all traffic from wg0 to docker0
-        iifname $wg_iface oifname "docker0" counter accept
+        iifname $wg_iface ip daddr $docker_subnet counter accept
          # Allow all traffic from docker0 to wg0
-        iifname "docker0" oifname $wg_iface counter accept
+        ip saddr $docker_subnet oifname $wg_iface counter accept
+
+        # Allow traffic between containers in docker network
+        ip saddr $docker_subnet ip daddr $docker_subnet counter accept
 
         # reject with polite "host unreachable" icmp response
         reject with icmpx type host-unreachable

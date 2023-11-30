@@ -3,7 +3,6 @@ public_key_path: /etc/wireguard/public.key
 public_iface: ens3
 wireguard_iface: wg0
 
-
 forwarded_ports:
   - protocol: tcp
     vpn_server_port: 50011
