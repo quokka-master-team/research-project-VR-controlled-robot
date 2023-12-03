@@ -81,7 +81,10 @@ void VideoStream::HandleRequest()
         auto reason = std::string(e.what());
 
         log.Warning("Bad character: " + reason);
-        listener.send(asio::buffer("Fail: " + reason));
+        if (listener.is_open())
+        {
+            listener.send(asio::buffer("Fail: " + reason));
+        }
         
         this->command["DISCONNECT"](std::vector<std::string>());
     }
@@ -97,8 +100,11 @@ void VideoStream::ListenForRequests()
         this->HandleRequest();
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
-    
-    listener.close();
+
+    if(listener.is_open())
+    {
+        listener.close();
+    }
     log.Info("Client disconnected!");
 }
 
