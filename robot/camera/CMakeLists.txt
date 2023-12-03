@@ -13,6 +13,9 @@ pkg_search_module(gstreamer REQUIRED IMPORTED_TARGET gstreamer-1.0)
 pkg_search_module(gstreamer-app REQUIRED IMPORTED_TARGET gstreamer-app-1.0)
 pkg_search_module(gstreamer-video REQUIRED IMPORTED_TARGET gstreamer-video-1.0)
 
+# Find GStreamer RTSP Server package
+pkg_search_module(gstreamer-rtsp-server REQUIRED IMPORTED_TARGET gstreamer-rtsp-server-1.0)
+
 # Find yaml-cpp package
 find_package(yaml-cpp REQUIRED)
 include_directories(${YAML_CPP_INCLUDE_DIRS})
@@ -33,6 +36,7 @@ target_link_libraries(Camera
     PkgConfig::gstreamer
     PkgConfig::gstreamer-app
     PkgConfig::gstreamer-video
+    PkgConfig::gstreamer-rtsp-server
     spdlog::spdlog
     pthread
     rt
