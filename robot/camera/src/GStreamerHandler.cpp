@@ -111,32 +111,54 @@ void GStreamerHandler::SetupStream()
 
 void GStreamerHandler::Cleanup()
 {
+    log.Debug("Starting Cleanup process...");
+
     if (this->pipeline)
     {
+        log.Debug("Stopping GStreamer pipeline...");
         gst_element_set_state(this->pipeline, GST_STATE_NULL);
         gst_object_unref(GST_OBJECT(this->pipeline));
         this->pipeline = nullptr;
     }
 
+    if (this->rtspServer)
+    {
+        log.Debug("Disconnecting RTSP server clients...");
+
+        auto session_pool = gst_rtsp_server_get_session_pool(this->rtspServer);
+        if (session_pool)
+        {
+            // Remove all sessions to force disconnect clients
+            gst_rtsp_session_pool_cleanup(session_pool);
+            g_object_unref(session_pool);
+        }
+        gst_rtsp_thread_pool_cleanup();
+
+        g_object_unref(this->rtspServer);
+        this->rtspServer = nullptr;
+    }
+
     if (this->streamLoop)
     {
-        g_main_loop_quit(this->streamLoop);
+        if (g_main_loop_is_running(this->streamLoop))
+        {
+            log.Debug("Quitting main loop...");
+            g_main_loop_quit(this->streamLoop);
+        }
         g_main_loop_unref(this->streamLoop);
         this->streamLoop = nullptr;
     }
 
     if (this->mediaFactory)
     {
+        log.Debug("Unreferencing media factory...");
         g_object_unref(this->mediaFactory);
         this->mediaFactory = nullptr;
     }
 
-    if (this->rtspServer)
-    {
-        g_object_unref(this->rtspServer);
-        this->rtspServer = nullptr;
-    }
+    log.Debug("Cleanup process completed.");
 }
+
 
 void GStreamerHandler::SetPipeline(const std::string &pipeline)
 {
@@ -157,6 +179,9 @@ void GStreamerHandler::BuildPipeline(const std::string &ipAddress, const std::st
         {
             this->rtspServer = gst_rtsp_server_new();
             this->mediaFactory = gst_rtsp_media_factory_new();
+
+            gst_rtsp_server_set_address(this->rtspServer, ipAddress.c_str());
+            gst_rtsp_server_set_service(this->rtspServer, port.c_str());
 
             gst_rtsp_media_factory_set_launch(this->mediaFactory, this->ParsePipeline(ipAddress, port).c_str());
             gst_rtsp_media_factory_set_shared(this->mediaFactory, TRUE);
