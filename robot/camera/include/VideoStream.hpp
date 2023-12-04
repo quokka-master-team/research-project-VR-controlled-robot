@@ -24,7 +24,9 @@ class VideoStream
     std::string ipAddress;
     std::string port;
     asio::ip::tcp::socket listener = asio::ip::tcp::socket(context);
+
     bool closeSocketRequest = false;
+    bool useRTSP = false;
 
     bool IsArgumentsCountValid(const std::vector<std::string>& arguments, int expected);
     void HandleCommand(const std::string& command);

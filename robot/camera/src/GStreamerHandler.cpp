@@ -1,4 +1,5 @@
 #include "GStreamerHandler.hpp"
+#include <gst/rtsp-server/rtsp-server.h>
 
 GStreamerHandler::GStreamerHandler()
 {
@@ -72,6 +73,42 @@ bool GStreamerHandler::IsPipelineValid(GstElement *pipeline, GError *&handle)
     return true;
 }
 
+std::string GStreamerHandler::ParsePipeline(const std::string &ipAddress, const std::string &port)
+{
+    auto result = this->rawPipeline;
+    
+    auto addressPos = this->rawPipeline.find("{ADDRESS}");
+    if (addressPos != std::string::npos)
+    {
+        result.replace(addressPos, sizeof("{ADDRESS}") - 1, ipAddress);
+    }
+
+    auto portPos = this->rawPipeline.find("{PORT}");
+    if (portPos != std::string::npos)
+    {
+        result.replace(portPos, sizeof("{PORT}") - 1, port);
+    }
+
+    return result;
+}
+
+void GStreamerHandler::SetupStream()
+{
+    auto bus = gst_pipeline_get_bus(GST_PIPELINE(this->pipeline));
+    gst_bus_add_watch(bus, this->BusCallback, this);
+    gst_object_unref(bus);
+
+    if (gst_element_set_state(this->pipeline, GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE)
+    {
+        throw std::runtime_error("Failed to start pipeline!");
+    }
+
+    if (!this->streamLoop)
+    {
+        this->streamLoop = g_main_loop_new(NULL, FALSE);
+    }
+}
+
 void GStreamerHandler::Cleanup()
 {
     if (this->pipeline)
@@ -87,6 +124,18 @@ void GStreamerHandler::Cleanup()
         g_main_loop_unref(this->streamLoop);
         this->streamLoop = nullptr;
     }
+
+    if (this->mediaFactory)
+    {
+        g_object_unref(this->mediaFactory);
+        this->mediaFactory = nullptr;
+    }
+
+    if (this->rtspServer)
+    {
+        g_object_unref(this->rtspServer);
+        this->rtspServer = nullptr;
+    }
 }
 
 void GStreamerHandler::SetPipeline(const std::string &pipeline)
@@ -95,85 +144,85 @@ void GStreamerHandler::SetPipeline(const std::string &pipeline)
     log.Info("Pipeline set to: " + this->rawPipeline);
 }
 
-void GStreamerHandler::BuildPipeline(const std::string &ipAddress, const std::string &port)
+void GStreamerHandler::BuildPipeline(const std::string &ipAddress, const std::string &port, bool rtsp)
 {
-    auto pipeline = this->rawPipeline;
-    
-    auto addressPos = pipeline.find("{ADDRESS}");
-    if (addressPos != std::string::npos)
-    {
-        pipeline.replace(addressPos, sizeof("{ADDRESS}") - 1, ipAddress);
-    }
-
-    auto portPos = pipeline.find("{PORT}");
-    if (portPos != std::string::npos)
-    {
-        pipeline.replace(portPos, sizeof("{PORT}") - 1, port);
-    }
-
     if (streamingThread.joinable())
     {
         streamingThread.join();
     }
 
-    if (this->pipeline != nullptr)
+    if (rtsp)
     {
-        gst_object_unref(GST_OBJECT(this->pipeline));
-    }
-
-    GError* errorHandle = nullptr;
-    auto newPipeline = gst_parse_launch(pipeline.c_str(), &errorHandle);
-
-    if (!IsPipelineValid(newPipeline, errorHandle))
-    {
-        log.Warning("Failed to load new pipeline. Reverting changes!");
-
-        if (this->pipeline != nullptr)
+        if (!this->rtspServer)
         {
-            gst_parse_launch(pipeline.c_str(), &errorHandle);
-        }
+            this->rtspServer = gst_rtsp_server_new();
+            this->mediaFactory = gst_rtsp_media_factory_new();
 
-        return;
+            gst_rtsp_media_factory_set_launch(this->mediaFactory, this->ParsePipeline(ipAddress, port).c_str());
+            gst_rtsp_media_factory_set_shared(this->mediaFactory, TRUE);
+
+            auto mounts = gst_rtsp_server_get_mount_points(this->rtspServer);
+            gst_rtsp_mount_points_add_factory(mounts, "/stream", this->mediaFactory);
+            g_object_unref(mounts);
+        }
     }
     else
     {
-        log.Info("Pipeline '" + pipeline + "' loaded!");
-    }
+        if (this->pipeline != nullptr)
+        {
+            gst_object_unref(GST_OBJECT(this->pipeline));
+        }
 
-    this->pipeline = newPipeline;
+        GError* errorHandle = nullptr;
+        auto newPipeline = gst_parse_launch(this->ParsePipeline(ipAddress, port).c_str(), &errorHandle);
+
+        if (IsPipelineValid(newPipeline, errorHandle))
+        {
+            this->pipeline = newPipeline;
+        }
+        else
+        {
+            log.Error("Failed to build pipeline!");
+        }
+    }
 }
 
-void GStreamerHandler::Start()
+void GStreamerHandler::Start(bool rtsp)
 {
-    if (this->pipeline == nullptr)
-    {
-        log.Error("Pipeline is not set! Aborting.");
-        return;
-    }
-
     if (this->isStreaming.load())
     {
         log.Warning("Stream is already live!");
         return;
     }
 
-    this->streamingThread = std::thread([this]()
+    if (rtsp)
+    {
+        if (!this->rtspServer)
+        {
+            log.Error("RTSP Server is not set! Aborting.");
+            return;
+        }
+
+        GError *error = nullptr;
+        gst_rtsp_server_attach(this->rtspServer, NULL);
+        this->streamLoop = g_main_loop_new(NULL, FALSE);
+    }
+    else
+    {
+        if (this->pipeline == nullptr)
+        {
+            log.Error("Pipeline is not set! Aborting.");
+            return;
+        }
+    }
+    
+    this->streamingThread = std::thread([this, rtsp]()
     {
         try
         {
-            auto bus = gst_pipeline_get_bus(GST_PIPELINE(this->pipeline));
-            gst_bus_add_watch(bus, this->BusCallback, this);
-            gst_object_unref(bus);
-
-            if (gst_element_set_state(this->pipeline, GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE)
+            if (!rtsp)
             {
-                log.Error("Failed to start pipeline!");
-                return;
-            }
-
-            if (!this->streamLoop)
-            {
-                this->streamLoop = g_main_loop_new(NULL, FALSE);
+                this->SetupStream();
             }
 
             this->isStreaming.store(true);

@@ -112,23 +112,27 @@ VideoStream::VideoStream()
 {
     this->command["START"] = [this](const std::vector<std::string>&)
     {
-        if (this->ipAddress.empty())
-        {
-            log.Error("Cannot start streaming as ADDRESS wasn't specified!");
-            return;
-        }
-
-        if (this->port.empty())
-        {
-            log.Error("Cannot start streaming as PORT wasn't specified!");
-            return;
-        }
-
         if (!gstreamer.IsStreaming())
         {
             log.Info("Starting stream...");
-            gstreamer.BuildPipeline(this->ipAddress, this->port);
-            gstreamer.Start();
+
+            if (this->useRTSP)
+            {
+                if (this->ipAddress.empty())
+                {
+                    log.Error("For RTSP streaming, specifing ADDRESS is obligatory!");
+                    return;
+                }
+
+                if (this->port.empty())
+                {
+                    log.Error("For RTSP streaming, specifing PORT is obligatory!");
+                    return;
+                }    
+            }
+
+            gstreamer.BuildPipeline(this->ipAddress, this->port, this->useRTSP);
+            gstreamer.Start(this->useRTSP);
         }
         else
         {
@@ -196,13 +200,33 @@ VideoStream::VideoStream()
 
         if (gstreamer.IsStreaming())
         {
-            gstreamer.Stop();
-            gstreamer.SetPipeline(pipeline);
-            gstreamer.Start();
+            this->command["STOP"](args);
+            this->command["START"](args);
         }
         else
         {
             gstreamer.SetPipeline(pipeline);
+        }
+    };
+
+    this->command["MODE"] = [this](const std::vector<std::string>& args)
+    {
+        if(!this->IsArgumentsCountValid(args, 1))
+        {
+            return;
+        }
+
+        if (args[0] == "NORMAL")
+        {
+            this->useRTSP = false;
+        }
+        else if (args[0] == "RTSP")
+        {
+            this->useRTSP = true;
+        }
+        else
+        {
+            log.Warning("Unknown mode: " + args[0]);
         }
     };
 
