@@ -9,6 +9,7 @@ from src.config import Settings
 from src.di import all_modules
 from src.core.api.models import ErrorMessage
 from kink import di
+import logging
 
 
 def create_app(settings: type[Settings] = Settings) -> FastAPI:
@@ -24,6 +25,7 @@ def create_app(settings: type[Settings] = Settings) -> FastAPI:
     app = FastAPI()
     app_settings = settings()
 
+    configure_logging(app_settings)
     configure_di(app_settings)
     configure_extensions(app_settings)
     configure_middleware(app, app_settings)
@@ -32,6 +34,10 @@ def create_app(settings: type[Settings] = Settings) -> FastAPI:
     register_routers(app, app_settings)
 
     return app
+
+
+def configure_logging(settings: Settings) -> None:
+    logging.basicConfig(encoding="utf-8", level=settings.LOGGING_LEVEL)
 
 
 def configure_di(settings: Settings) -> None:
