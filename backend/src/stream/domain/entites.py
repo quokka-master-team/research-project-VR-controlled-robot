@@ -59,4 +59,4 @@ class Transmission:
 
     def receive_data(self) -> bytes:
         frame = next(self._content)
-        return frame.to_ndarray().tobytes()
+        return frame.to_image().tobytes()
