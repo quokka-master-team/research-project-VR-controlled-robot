@@ -55,6 +55,8 @@ mypy-extensions==1.0.0
     # via mypy
 numpy==1.26.2
     # via -r ./requirements/base.in
+pillow==10.1.0
+    # via -r ./requirements/base.in
 psycopg2-binary==2.9.9
     # via -r ./requirements/base.in
 pycparser==2.21
