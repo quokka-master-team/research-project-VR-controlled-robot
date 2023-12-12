@@ -2,72 +2,77 @@
 # Software License Agreement (BSD License)
 
 import rospy
+import os
+import subprocess
+import time
 from std_msgs.msg import String
 from mavros_msgs.msg import OverrideRCIn
 
 class RobotController:
-    # Map commands to corresponding methods
-    # command_handlers = {
-    #     'establish_connection': 'establish_connection',
-    #     'forward': 'move_forward',
-    #     'backward': 'move_backward',
-    #     'left': 'move_left',
-    #     'right': 'move_right',
-    #     'stop': 'stop',
-    #     'lose_connection': 'lose_connection',
-    # }
+    ros_launch_command = "roslaunch mavros px4.launch"
+    ros_arm_command = "rosservice call /mavros/cmd/arming 'value: true'"
+    ros_disarm_command = "rosservice call /mavros/cmd/arming 'value: false'"
 
     def __init__(self):
-        pass
+        self.ros_launch_process = None
 
-    def establish_connection(self):
-        # probably needs to be changed when we have a connection to the robot
-        self.pub = rospy.Publisher('/mavros/rc/override', OverrideRCIn, queue_size=10)
+    def init_node(self):
+        self.ros_launch_process = subprocess.Popen(self.ros_launch_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        time.sleep(5)
         self.init_node = rospy.init_node('talker', anonymous=True)
+        self.pub = rospy.Publisher('/mavros/rc/override', OverrideRCIn, queue_size=10)
         self.message = OverrideRCIn()
-        self.message.channels = [1800, 1500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        self.rate = rospy.Rate(10)  # 10hz
+        self.rate = rospy.Rate(10)  # 10Hz
+        print("Node initialized")
+
+    def arm_pixhawk(self):
+        os.system(self.ros_arm_command)
+
+    def disarm_pixhawk(self):
+        os.system(self.ros_disarm_command)
+
+    def terminate_ros_process(self):
+        self.disarm_pixhawk()
+        self.kill_process_by_name('px4.launch')
 
     def move_forward(self):
-        self.message.channels = [1800, 1500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        self.message.channels = [1600, 1500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        self.pub.publish(self.message)
+        self.rate.sleep()
+
+    def move_backward(self):
+        self.message.channels = [1400, 1500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         self.pub.publish(self.message)
         self.rate.sleep()
 
     def move_left(self):
-        # Add logic for moving left
-        print("ROS")
-        pass
+        self.message.channels = [1500, 1600, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        self.pub.publish(self.message)
+        self.rate.sleep()
 
     def move_right(self):
-        # Add logic for moving right
-        pass
-
-    def move_backward(self):
-        # Add logic for moving backward
-        pass
+        self.message.channels = [1500, 1400, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        self.pub.publish(self.message)
+        self.rate.sleep()
 
     def stop(self):
-        # Add logic for moving backward
-        pass
+        self.message.channels = [1500, 1500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        self.pub.publish(self.message)
+        self.rate.sleep()
 
-    def lose_connection(self):
-        # Add logic for stopping
-        pass
+    def kill_process_by_name(self, process_name):
+        try:
+            # Use pgrep to find process IDs by name
+            pgrep_command = f"pgrep -f {process_name}"
+            process_ids = subprocess.check_output(pgrep_command, shell=True).decode().split()
 
-    # def execute_command(self, command):
-    #     handler = self.command_handlers.get(command.lower())
-    #     if handler:
-    #         handler()
-    #     else:
-    #         print(f"Unknown command: {command}")
+            if process_ids:
+                # Use kill to terminate processes by PID
+                kill_command = f"kill -9 {' '.join(process_ids)}"
+                subprocess.run(kill_command, shell=True)
+                print(f"Processes with name '{process_name}' terminated.")
+            else:
+                print(f"No processes found with name '{process_name}'.")
 
-# if __name__ == '__main__':
-#     try:
-#         robot_controller = RobotController()
-#         robot_controller.establish_connection()
-
-#         # Example usage of the execute_command method
-#         # robot_controller.stop()
-
-#     except rospy.ROSInterruptException:
-#         pass
+        except subprocess.CalledProcessError as e:
+            print(f"Error executing command: {e}")
