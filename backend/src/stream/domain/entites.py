@@ -50,12 +50,12 @@ class Transmission:
         self.av_container = av.open(
             f"rtsp://{self._stream_destination_ip}:{self._stream_destination_port}/stream",
         )
+        self._content = self.av_container.decode(video=0)
         return self
 
     def __exit__(self, *args: Any) -> None:
         self.av_container.close()
         self._stop_transmission()
 
-    # def receive_data(self) -> bytes:
-    #     frame = next(self._content)
-    #     return frame.to_image().tobytes()
+    def receive_data(self) -> bytes:
+        return next(self._content)
