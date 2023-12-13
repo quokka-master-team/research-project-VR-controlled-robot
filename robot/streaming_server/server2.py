@@ -2,7 +2,7 @@
 # Software License Agreement (BSD License)
 
 import socket
-from talker3 import RobotController
+from talker2 import RobotController
 
 class Server:
     command_handlers = {
