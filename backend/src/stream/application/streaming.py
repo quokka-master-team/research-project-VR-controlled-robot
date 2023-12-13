@@ -78,8 +78,7 @@ class StreamingService:
         with Transmission(stream_unit, self._settings) as t:
             for packet in t.av_container.demux(video=0):
                 for frame in packet.decode():
-                    img_bytes = frame.to_image().tobytes()
-                    await connection.send_text(b64encode(img_bytes).decode("utf-8"))
+                    await connection.send_bytes(frame)
                     await connection.receive()
 
     async def start(
