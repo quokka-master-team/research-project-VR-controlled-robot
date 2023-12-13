@@ -84,7 +84,7 @@ class StreamingService:
                     img = img[:, :, ::-1]
                     ret, jpeg = cv2.imencode('.jpg', img)
                     frame_bytes = jpeg.tobytes()
-                    await connection.send(frame_bytes)
+                    await connection.send_bytes(frame_bytes)
                     await connection.receive()
 
     async def start(
