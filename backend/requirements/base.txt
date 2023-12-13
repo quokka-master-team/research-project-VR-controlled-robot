@@ -27,7 +27,7 @@ click==8.1.7
     # via uvicorn
 cryptography==41.0.7
     # via authlib
-fastapi==0.104.1
+fastapi==0.105.0
     # via -r ./requirements/base.in
 h11==0.14.0
     # via
@@ -54,6 +54,10 @@ mypy==1.7.1
 mypy-extensions==1.0.0
     # via mypy
 numpy==1.26.2
+    # via
+    #   -r ./requirements/base.in
+    #   opencv-python
+opencv-python==4.8.1.78
     # via -r ./requirements/base.in
 pillow==10.1.0
     # via -r ./requirements/base.in
@@ -83,7 +87,7 @@ sqlalchemy==2.0.23
     #   alembic
 starlette==0.27.0
     # via fastapi
-typing-extensions==4.8.0
+typing-extensions==4.9.0
     # via
     #   alembic
     #   fastapi

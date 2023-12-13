@@ -16,7 +16,8 @@ from src.stream.api.messages import Errors
 from src.core.api.messages import ApiErrors, BaseError
 from src.auth.exceptions import InvalidToken
 from src.auth.ports import IAMTokenVerificationService
-from base64 import b64encode
+import cv2
+import numpy as np
 
 
 class StreamingService:
@@ -78,9 +79,15 @@ class StreamingService:
         with Transmission(stream_unit, self._settings) as t:
             for packet in t.av_container.demux(video=0):
                 for frame in packet.decode():
-                    image_bytes = frame.to_image().tobytes()
-                    base64_encoded = b64encode(image_bytes).decode("utf-8")
-                    await connection.send_text(base64_encoded)
+                    img = frame.to_image()
+                    img = np.array(img)
+                    img = img[:, :, ::-1]
+                    ret, jpeg = cv2.imencode('.jpg', img)
+                    frame_bytes = jpeg.tobytes()
+                    await connection.send_bytes(
+                        b'--frame\r\n'
+                        b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n'
+                    )
                     await connection.receive()
 
     async def start(
