@@ -80,11 +80,11 @@ class StreamingService:
             for packet in t.av_container.demux(video=0):
                 for frame in packet.decode():
                     img = frame.to_image()
-                    img = np.array(img)
-                    img = img[:, :, ::-1]
-                    ret, jpeg = cv2.imencode('.jpg', img)
-                    frame_bytes = jpeg.tobytes()
-                    await connection.send_bytes(frame_bytes)
+                    # img = np.array(img)
+                    # img = img[:, :, ::-1]
+                    # ret, jpeg = cv2.imencode('.jpg', img)
+                    # frame_bytes = jpeg.tobytes()
+                    await connection.send_bytes(img.tobytes())
                     await connection.receive()
 
     async def start(
