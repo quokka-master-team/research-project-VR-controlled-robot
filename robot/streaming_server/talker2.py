@@ -25,15 +25,16 @@ class RobotController:
         self.rate = rospy.Rate(10)  # 10Hz
         print("Node initialized")
 
+    def terminate_pixhawk(self):
+        self.disarm_pixhawk()
+        self.kill_process_by_name('px4.launch')
+        del self
+
     def arm_pixhawk(self):
         os.system(self.ros_arm_command)
 
     def disarm_pixhawk(self):
         os.system(self.ros_disarm_command)
-
-    def terminate_ros_process(self):
-        self.disarm_pixhawk()
-        self.kill_process_by_name('px4.launch')
 
     def move_forward(self):
         self.message.channels = [1600, 1500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
