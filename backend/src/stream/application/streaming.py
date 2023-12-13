@@ -76,10 +76,10 @@ class StreamingService:
             self, stream_unit: StreamUnitDto, connection: WebSocket
     ) -> None:
         with Transmission(stream_unit, self._settings) as t:
-            for packet in t.av_container.demux(video=0):
-                for frame in packet.decode():
-                    await connection.send_bytes(frame)
-                    await connection.receive()
+            while self._transmit():
+                data = t.receive_data()
+                await connection.send_bytes(data)
+                await connection.receive()
 
     async def start(
             self, token: str, stream_unit_id: UUID, connection: WebSocket
