@@ -16,7 +16,7 @@ from src.stream.api.messages import Errors
 from src.core.api.messages import ApiErrors, BaseError
 from src.auth.exceptions import InvalidToken
 from src.auth.ports import IAMTokenVerificationService
-import logging
+from base64 import b64encode
 
 
 class StreamingService:
@@ -76,10 +76,11 @@ class StreamingService:
             self, stream_unit: StreamUnitDto, connection: WebSocket
     ) -> None:
         with Transmission(stream_unit, self._settings) as t:
-            while self._transmit():
-                content = t.receive_data()
-                await connection.send_bytes(content)
-                await connection.receive()
+            for packet in t.av_container.demux(video=0):
+                for frame in packet.decode():
+                    img_bytes = frame.to_image().tobytes()
+                    await connection.send_text(b64encode(img_bytes).decode("utf-8"))
+                    await connection.receive()
 
     async def start(
             self, token: str, stream_unit_id: UUID, connection: WebSocket
