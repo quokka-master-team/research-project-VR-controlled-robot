@@ -12,8 +12,10 @@ bool VideoStream::IsArgumentsCountValid(const std::vector<std::string> &argument
             argumentList += arg + "; ";
         }
 
-        log.Error("Expected " + std::to_string(expected) + " argument(s), got " + 
-            std::to_string(arguments.size()) + ": " + argumentList);
+        log.Error(
+            "Expected " + std::to_string(expected) + 
+            " argument(s), got " + std::to_string(arguments.size()) + ": " + argumentList);
+
         return false;
     }
 
@@ -31,6 +33,15 @@ void VideoStream::HandleCommand(const std::string &command)
         },
         std::istream_iterator<std::string>{}
     };
+
+    if (this->stream == nullptr)
+    {
+        if (!(tokens[0] == "PLAIN" || tokens[0] == "RTSP"))
+        {
+            log.Error("Streaming is not initialized! Use for ex. 'PLAIN' command first.");
+            return;
+        }
+    }
 
     auto searchedCommand = this->command.find(tokens[0]);
     if (searchedCommand != this->command.end())
@@ -73,7 +84,7 @@ void VideoStream::HandleRequest()
         if (!line.empty())
         {
             this->HandleCommand(line);
-            listener.send(asio::buffer("Ok"));
+            listener.send(asio::buffer(""));
         }
     }
     catch (const std::system_error& e)
@@ -112,27 +123,9 @@ VideoStream::VideoStream()
 {
     this->command["START"] = [this](const std::vector<std::string>&)
     {
-        if (!gstreamer.IsStreaming())
+        if (!this->stream->IsStreaming())
         {
-            log.Info("Starting stream...");
-
-            if (this->useRTSP)
-            {
-                if (this->ipAddress.empty())
-                {
-                    log.Error("For RTSP streaming, specifing ADDRESS is obligatory!");
-                    return;
-                }
-
-                if (this->port.empty())
-                {
-                    log.Error("For RTSP streaming, specifing PORT is obligatory!");
-                    return;
-                }    
-            }
-
-            gstreamer.BuildPipeline(this->ipAddress, this->port, this->useRTSP);
-            gstreamer.Start(this->useRTSP);
+            this->stream->Start();
         }
         else
         {
@@ -142,10 +135,9 @@ VideoStream::VideoStream()
 
     this->command["STOP"] = [this](const std::vector<std::string>& args)
     {
-        if (gstreamer.IsStreaming())
+        if (this->stream->IsStreaming())
         {
-            log.Info("Stopping stream...");
-            gstreamer.Stop();
+            this->stream->Stop();
         }
         else
         {
@@ -155,33 +147,14 @@ VideoStream::VideoStream()
 
     this->command["EXIT"] = [this](const std::vector<std::string>& args)
     {
-        log.Info("Quitting...");
-
         this->command["DISCONNECT"](args);
+        
+        if (this->stream->IsStreaming())
+        {
+            this->stream->Stop();
+        }
+
         this->listenToClient.store(false);
-    };
-
-    this->command["SET"] = [this](const std::vector<std::string>& args)
-    {
-        if (!this->IsArgumentsCountValid(args, 2))
-        {
-            return;
-        }
-
-        if (args[0] == "ADDRESS")
-        {
-            this->ipAddress = args[1];
-            log.Info("New IP address " + args[1] + " set!");
-        }
-        else if (args[0] == "PORT")
-        {
-            this->port = args[1];
-            log.Info("New port " + args[1] + " set!");
-        }
-        else
-        {
-            log.Warning("Unknown parameter: " + args[0] + ". Aborting!");
-        }
     };
 
     this->command["USE"] = [this](const std::vector<std::string>& args)
@@ -198,36 +171,42 @@ VideoStream::VideoStream()
             pipeline += arg + " ";
         }
 
-        if (gstreamer.IsStreaming())
+        if (this->stream->IsStreaming())
         {
             this->command["STOP"](args);
+            this->stream->SetPipeline(pipeline);
             this->command["START"](args);
         }
         else
         {
-            gstreamer.SetPipeline(pipeline);
+            this->stream->SetPipeline(pipeline);
         }
     };
 
-    this->command["MODE"] = [this](const std::vector<std::string>& args)
+    this->command["PLAIN"] = [this](const std::vector<std::string>&)
     {
-        if(!this->IsArgumentsCountValid(args, 1))
+        if (this->stream)
+        {
+            this->stream.reset();
+        }
+        this->stream = std::make_unique<BasicStream>();
+    };
+
+    this->command["RTSP"] = [this](const std::vector<std::string>& args)
+    {
+        if (!this->IsArgumentsCountValid(args, 2))
         {
             return;
         }
+        
+        if (this->stream)
+        {
+            this->stream.reset();
+        }
+        this->stream = std::make_unique<RTSPStream>();
+        RTSPStream* rtspStream = static_cast<RTSPStream*>(this->stream.get());
 
-        if (args[0] == "NORMAL")
-        {
-            this->useRTSP = false;
-        }
-        else if (args[0] == "RTSP")
-        {
-            this->useRTSP = true;
-        }
-        else
-        {
-            log.Warning("Unknown mode: " + args[0]);
-        }
+        rtspStream->SetEndpoint(args[0], args[1]);
     };
 
     this->command["DISCONNECT"] = [this](const std::vector<std::string>&)
@@ -266,13 +245,10 @@ bool VideoStream::IsListening()
 VideoStream::~VideoStream()
 {
     listenToClient.store(false);
-
     context.stop();
 
     if (listenerThread.joinable())
     {
         listenerThread.join();
     }
-
-    log.Info("Stream closed!");
 }

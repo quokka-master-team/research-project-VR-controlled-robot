@@ -1,44 +1,41 @@
 #pragma once
-#include <string>
 #include <functional>
 #include <unordered_map>
 #include <asio.hpp>
 
-#include "GStreamerHandler.hpp"
+#include "Stream/BasicStream.hpp"
+#include "Stream/RTSPStream.hpp"
 
 class VideoStream
 {
-    GStreamerHandler& gstreamer = GStreamerHandler::Get();
-    Log& log = Log::Get();
+public:
+    VideoStream();
+    ~VideoStream();
 
-    std::unique_ptr<asio::ip::tcp::acceptor> acceptor;
-    std::atomic<bool> listenToClient{false};
-    std::thread listenerThread;
-    asio::io_context context;
+    void ListenOn(const std::string& serverIp, unsigned short port);
+    bool IsListening();
+
+private:
+    Log& log = Log::Get();
+    std::unique_ptr<GStreamer> stream = nullptr;
 
     std::unordered_map<
         std::string, 
         std::function<void(const std::vector<std::string>&)>
     > command;
 
-    std::string ipAddress;
-    std::string port;
+    asio::io_context context;
     asio::ip::tcp::socket listener = asio::ip::tcp::socket(context);
+    std::unique_ptr<asio::ip::tcp::acceptor> acceptor;
+
+    std::atomic<bool> listenToClient{false};
+    std::thread listenerThread;
 
     bool closeSocketRequest = false;
-    bool useRTSP = false;
 
     bool IsArgumentsCountValid(const std::vector<std::string>& arguments, int expected);
     void HandleCommand(const std::string& command);
     void HandleRequest();
 
     void ListenForRequests();
-
-public:
-    VideoStream();
-
-    void ListenOn(const std::string& serverIp, unsigned short port);
-    bool IsListening();
-
-    ~VideoStream();
 };
