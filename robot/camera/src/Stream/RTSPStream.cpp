@@ -32,10 +32,66 @@ void RTSPStream::Start()
 
 void RTSPStream::SetEndpoint(const std::string &ipAddress, const std::string &port)
 {
-    this->serverAddress = ipAddress;
-    this->serverPort = port;
+    try
+    {
+        if (!IsEndpointAvaliable(ipAddress, port))
+        {
+            log.Warning("The address is already occupied. You might have issues with connecting to the server...");
+        }
 
-    log.Info("RTSP will be hosted on rtsp://" + ipAddress + ":" + port + this->serverPath);
+        this->serverAddress = ipAddress;
+        this->serverPort = port;
+    }
+    catch(const std::exception& e)
+    {
+        log.Error(e.what());
+        log.Warning("The default settings were loaded.");
+    }
+
+    log.Info("RTSP will be hosted on rtsp://" + this->serverAddress + ":" + this->serverPort + this->serverPath);
+}
+
+bool RTSPStream::IsEndpointAvaliable(const std::string& ipAddress, const std::string& port)
+{
+    int portToCheck;
+
+    try {
+        portToCheck = std::stoi(port);
+
+        if (portToCheck < 0 || portToCheck > 65535)
+        {
+            throw std::out_of_range("Port number out of range");
+        }
+    }
+    catch (const std::invalid_argument& e)
+    {
+        throw std::runtime_error("Invalid port number!");
+        return false;
+    }
+    catch (const std::out_of_range& e)
+    {
+        throw std::runtime_error("Port number out of range!");
+        return false;
+    }
+
+    asio::io_context io_context;
+    asio::ip::tcp::endpoint endpoint(asio::ip::make_address(ipAddress), asio::ip::port_type(portToCheck));
+    asio::ip::tcp::socket socket(io_context);
+
+    asio::error_code ec;
+    socket.open(endpoint.protocol(), ec);
+    if (ec) 
+    {
+        return false;
+    }
+
+    socket.bind(endpoint, ec);
+    if (ec) 
+    {
+        return false;
+    }
+
+    return true;
 }
 
 void RTSPStream::SetupEndpoint()
