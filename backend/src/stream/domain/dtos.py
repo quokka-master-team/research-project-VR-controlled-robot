@@ -14,7 +14,8 @@ if TYPE_CHECKING:
 @dataclass(frozen=True)
 class StreamUnitDto:
     id: UUID
-    video_url: URL
+    host: str
+    port: int
     api_url: URL
     secret: str | None
 
@@ -34,7 +35,8 @@ class WriteStreamUnit:
     name: StreamUnitName
     description: str
     location: StreamUnitLocation
-    video_url: URL
+    host: str
+    port: int
     api_url: URL
     secret: str | None
 
@@ -46,7 +48,8 @@ class WriteStreamUnit:
             name=StreamUnitName(stream_unit.name),
             description=stream_unit.description,
             location=StreamUnitLocation(stream_unit.location),
-            video_url=URL(stream_unit.video_url),
+            host=stream_unit.host,
+            port=stream_unit.port,
             api_url=URL(stream_unit.api_url),
             secret=stream_unit.secret,
         )

@@ -1,4 +1,4 @@
-FROM python:3.11.4-alpine
+FROM python:3.11-slim-bookworm
 
 WORKDIR /home/backend
 
@@ -7,12 +7,14 @@ ENV PYTHONUNBUFFERED 1
 
 COPY requirements /tmp/requirements
 
-RUN apk --update add  \
-    bash  \
+RUN apt-get update && apt-get upgrade
+RUN apt-get install -y bash  \
+    wget \
     gcc  \
     libc-dev  \
     libffi-dev  \
-    postgresql-client
+    postgresql-client \
+    ffmpeg
 
 RUN set -ex \
     && wget "https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh" -O /usr/bin/wait-for-it \
