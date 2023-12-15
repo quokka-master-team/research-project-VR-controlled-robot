@@ -1,7 +1,7 @@
 ﻿cmake_minimum_required (VERSION 3.10)
 
 project ("Camera")
-file(GLOB src_files "include/*.hpp" "src/*.cpp")
+file(GLOB src_files "include/*.hpp" "src/*.cpp" "include/Stream/*.hpp" "src/Stream/*.cpp")
 add_executable (Camera ${src_files} )
 include_directories(Camera PRIVATE "include")
 
