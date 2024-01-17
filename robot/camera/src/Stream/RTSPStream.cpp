@@ -109,15 +109,21 @@ void RTSPStream::SetupEndpoint()
 
 void RTSPStream::Cleanup()
 {
-    if (this->mediaFactory && GST_IS_OBJECT(this->mediaFactory))
+    if (this->mediaFactory)
     {
-        gst_object_unref(this->mediaFactory);
+        if (GST_IS_OBJECT(this->mediaFactory))
+        {
+            gst_object_unref(this->mediaFactory);
+        }
         this->mediaFactory = nullptr;
     }
 
-    if (this->rtspServer && GST_IS_OBJECT(this->rtspServer))
+    if (this->rtspServer)
     {
-        gst_object_unref(this->rtspServer);
+        if (GST_IS_OBJECT(this->rtspServer))
+        {
+            gst_object_unref(this->rtspServer);
+        }
         this->rtspServer = nullptr;
     }
 }
