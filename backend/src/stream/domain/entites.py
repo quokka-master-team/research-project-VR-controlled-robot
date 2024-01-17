@@ -31,10 +31,8 @@ class Transmission:
             client,
             commands=[
                 "STOP",
-                "MODE RTSP",
+                f"RTSP {self._stream_destination_ip} {self._stream_destination_port}",
                 f"USE {self._stream_pipeline}",
-                f"SET ADDRESS {self._stream_destination_ip}",
-                f"SET PORT {self._stream_destination_port}",
                 "START",
                 "DISCONNECT",
             ],
