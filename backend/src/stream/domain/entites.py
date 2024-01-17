@@ -21,6 +21,7 @@ class Transmission:
     @staticmethod
     def _send_commands(client: socket.socket, commands: list[str]) -> None:
         for command in commands:
+            print(f"Sending command: {command}", flush=True)
             client.send(command.encode() + b"\n")
             client.recv(1024)
 
