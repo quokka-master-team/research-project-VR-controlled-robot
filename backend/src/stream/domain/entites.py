@@ -23,7 +23,7 @@ class Transmission:
         for command in commands:
             print(f"Sending command: {command}", flush=True)
             client.send(command.encode() + b"\n")
-            client.recv(1024)
+            print(f"Receiving {client.recv(1024)}")
 
     def _setup(self) -> None:
         client = self._create_client()
