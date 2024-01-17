@@ -75,7 +75,7 @@ bool RTSPStream::IsEndpointAvaliable(const std::string& ipAddress, const std::st
     }
 
     asio::io_context io_context;
-    asio::ip::tcp::endpoint endpoint(asio::ip::make_address(ipAddress), asio::ip::port_type(portToCheck));
+    asio::ip::tcp::endpoint endpoint(asio::ip::make_address(ipAddress), static_cast<unsigned short>(portToCheck));
     asio::ip::tcp::socket socket(io_context);
 
     asio::error_code ec;
