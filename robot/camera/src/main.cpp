@@ -3,6 +3,7 @@
 
 int main(int argc, char *argv[])
 {
+    gst_init(nullptr, nullptr);
     ConfigReader configuration("config.yaml");
     VideoStream stream;
 
@@ -21,5 +22,6 @@ int main(int argc, char *argv[])
         Log::Get().Critical(e.what());
     }
 
+    gst_deinit();
     return 0;
 }
