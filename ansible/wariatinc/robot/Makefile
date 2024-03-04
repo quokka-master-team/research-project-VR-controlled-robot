@@ -1,5 +1,6 @@
 SHELL := bash
-API_TOKEN="2WcPd9AcWXROqQpB4ie1iFIPFc7_AzAQNJAEkU32RFDXMEBE"
+# Provide token to NGROK API
+API_TOKEN=""
 API_URL="https://api.ngrok.com/tunnels"
 SSH_USER="robot"
 SSH_KEY_FILE="~/.ssh/id_rsa"

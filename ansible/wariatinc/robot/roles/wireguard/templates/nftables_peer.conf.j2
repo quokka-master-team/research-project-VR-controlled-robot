@@ -1,0 +1,36 @@
+#!/usr/sbin/nft -f
+flush ruleset
+
+table inet filter {
+    chain input {
+        type filter hook input priority 0;
+
+        # accept all loopback packets
+        iif "lo" accept
+        # accept all icmp/icmpv6 packets
+        meta l4proto { icmp, ipv6-icmp } accept
+        # accept all packets that are part of an already-established connection
+        ct state vmap { invalid : drop, established : accept, related : accept }
+        # drop new connections over rate limit, protect before DDOS attack
+        ct state new limit rate over 100/second burst 10 packets drop
+        # accept all DHCPv6 packets received at a link-local address
+        ip6 daddr fe80::/64 udp dport dhcpv6-client accept
+        # accept all SSH, http, https, xrdp, wireguard packets 
+        tcp dport {http,https, {{ tcp_peer_ports }}, {{ peer_in_ports.tcp | join(',')}} } accept
+        udp dport {51820, {{ udp_peer_ports }}, {{ peer_in_ports.udp | join(',') }} } accept
+
+        
+    }
+
+    chain forward {
+        type filter hook forward priority 0;
+
+        # route your own packets
+        policy drop;
+    }
+
+    chain output {
+        type filter hook output priority 0;
+        policy accept;
+    }
+}

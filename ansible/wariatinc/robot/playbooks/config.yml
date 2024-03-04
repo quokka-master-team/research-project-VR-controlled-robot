@@ -4,20 +4,6 @@
   hosts: all
   roles:
     - name: os_config
-      vars: 
-        users: 
-          - name: lszarecki
-            state: present
-          - name: jkoniuszewski
-            state: present
-          - name: devuser
-            state: present
-        packages:
-          - tree
-          - wireguard
-          - resolvconf
-          - traceroute
-          - nftables
     - name: wireguard
       become: yes
     - name: services

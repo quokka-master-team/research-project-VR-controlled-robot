@@ -5,17 +5,23 @@
     state: started
     enabled: yes
   tags:
-    - wireguard_server
+    - nft
+
+- name: Set tcp ports
+  ansible.builtin.set_fact:
+    tcp_peer_ports: "{{ forwarded_ports | json_query('[?protocol == `tcp`].peer_port') | unique | join(', ') | string }}"
+    udp_peer_ports: "{{ forwarded_ports | json_query('[?protocol == `udp`].peer_port') | unique | join(', ') | string }}"
+  tags:
+    - nft
 
 - name: Set nftables.conf file
   ansible.builtin.template:
     dest: /etc/nftables.conf
-    src: nftables_server.conf.j2
+    src: "{{ 'nftables_peer.conf.j2' if 'ovh_server' not in group_names else 'nftables_server.conf.j2' }}"
     owner: root
     group: root
     mode: '0600'
   tags:
-    - wireguard_server
     - nft
 
 - name: Stop & disable ufw
@@ -31,7 +37,6 @@
     name: nftables
     state: restarted
   tags:
-    - wireguard_server
     - nft
 
 # - name: Start ufw and enable on boot

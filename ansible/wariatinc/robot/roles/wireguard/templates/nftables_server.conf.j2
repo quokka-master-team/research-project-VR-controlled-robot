@@ -1,9 +1,11 @@
 #!/usr/sbin/nft -f
 flush ruleset
 
-define pub_iface = {{ public_iface }}
-define wg_iface = {{ wireguard_iface }}
-define wg_port = 51820
+define PUB_IFACE = {{ public_iface }}
+define WG_IFACE = {{ wireguard_iface }}
+define WG_PORT = 51820
+define WG_NET      = 10.0.0.0/24
+define DOCKER_SUBNET = 172.17.0.0/24
 
 table inet filter {
     chain input {
@@ -15,23 +17,23 @@ table inet filter {
         meta l4proto { icmp, ipv6-icmp } accept
         # accept all packets that are part of an already-established connection
         ct state vmap { invalid : drop, established : accept, related : accept }
-        # drop new connections over rate limit
-        ct state new limit rate over 1/second burst 10 packets drop
-
+        # drop new connections over rate limit, protect before DDOS attack
+        ct state new limit rate over 500000/second burst 100 packets drop
         # accept all DHCPv6 packets received at a link-local address
         ip6 daddr fe80::/64 udp dport dhcpv6-client accept
         # accept all SSH packets received on a public interface
-        iifname $pub_iface tcp dport ssh accept
+        iifname $PUB_IFACE tcp dport ssh accept
+        iifname $WG_IFACE tcp dport ssh accept
         # accept all WireGuard packets received on a public interface
-        iifname $pub_iface udp dport $wg_port accept
+        iifname $PUB_IFACE udp dport $WG_PORT counter accept
+        iifname $PUB_IFACE tcp dport {8001, 8002} counter accept 
+        iifname $WG_IFACE udp dport { {{ server_in_ports.udp | join(',') }} } counter accept
+        iifname $WG_IFACE tcp dport { {{ server_in_ports.tcp | join(',') }} } counter accept
         # reject with polite "port unreachable" icmp response
 
-        # akceptowanie polaczen na serwer OVH - lokalnie
-        iifname $pub_iface tcp dport {http, https} counter accept
-        iifname $wg_iface udp dport 1234 counter accept
-        iifname $pub_iface tcp dport 3389 counter accept
-
-        # reject
+        # accept direct connection on OVH server
+        # iifname $PUB_IFACE tcp dport {http, https, 3389} counter accept
+        reject
     }
     chain output {
         type filter hook output priority 0; policy accept;
@@ -39,12 +41,35 @@ table inet filter {
 
     chain forward {
         type filter hook forward priority 0; policy drop;
-
+        
         # forward all packets that are part of an already-established connection
         ct state vmap { invalid : drop, established : accept, related : accept }
+        # forward packets between wireguard clients
+        iifname $WG_IFACE oifname $WG_IFACE counter accept
         # forward any incoming packets from a public interface that will go out through WireGuard
-        iifname $pub_iface oifname $wg_iface accept
+        iifname $WG_IFACE oifname $PUB_IFACE counter accept
 
+        iifname $PUB_IFACE tcp dport { {{ tcp_peer_ports }} } accept
+        iifname $PUB_IFACE udp dport { {{ udp_peer_ports }} } accept
+
+        # Allow all traffic from ens3 to DOCKER_SUBNET
+        iifname $PUB_IFACE ip daddr $DOCKER_SUBNET counter accept
+         # Allow all traffic from docker0 to ens3
+        ip saddr $DOCKER_SUBNET oifname $PUB_IFACE counter accept
+
+        # Allow all traffic from wg0 to docker0
+        iifname $WG_IFACE ip daddr $DOCKER_SUBNET counter accept
+         # Allow all traffic from docker0 to wg0
+        ip saddr $DOCKER_SUBNET oifname $WG_IFACE counter accept
+
+        # Allow traffic between containers in docker network
+        ip saddr $DOCKER_SUBNET ip daddr $DOCKER_SUBNET counter accept
+
+        limit rate 60/minute burst 100 packets \
+            log prefix "Forward - Drop: " \
+            comment "Log any unmatched traffic"
+        counter \
+            comment "Count any unmatched traffic"
         # reject with polite "host unreachable" icmp response
         reject with icmpx type host-unreachable
     }
@@ -56,12 +81,13 @@ table inet nat {
         # TU ROBIONY JEST PORTFORWARDING
         ###############################################
         {% for item in forwarded_ports %}
-        iifname $pub_iface {{ item.protocol }} dport {{ item.vpn_server_port }} dnat ip to {{ wireguard_peer_ipv4 }}:{{ item.peer_port }}
+        iifname $PUB_IFACE {{ item.protocol }} dport {{ item.vpn_server_port }} dnat ip to {{ item.peer_ip }}:{{ item.peer_port }}
         {% endfor %}
     }
     chain postrouting {
         type nat hook postrouting priority 100; policy accept;
         # masquerade all packets going out through WireGuard
-        oifname $wg_iface masquerade
+        oifname $WG_IFACE masquerade
+        oifname $PUB_IFACE ip saddr $WG_NET masquerade
     }
 }

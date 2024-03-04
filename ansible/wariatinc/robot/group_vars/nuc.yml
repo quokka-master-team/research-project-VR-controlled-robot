@@ -1,0 +1,8 @@
+# Porty otwarte na NUC server na wszystkich interfejs
+peer_in_ports:
+  udp:
+    - 9000
+  tcp:
+    - 5000
+    - 5001
+    - 5002

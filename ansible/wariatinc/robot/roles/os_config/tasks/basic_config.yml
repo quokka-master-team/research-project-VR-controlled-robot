@@ -23,7 +23,7 @@
         name: "{{ item.name }}"
         shell: /bin/bash
         create_home: yes
-        password: "{{ item.name | password_hash('sha512', 'mysecretsalt') }}"
+        password: "{{ item.password | password_hash('sha512', 'mysecretsalt') }}"
         groups: 
           - adm
           - sudo
@@ -48,7 +48,7 @@
   block:
     - name: Ensure the .ssh directory exists
       ansible.builtin.file:
-        path: /home/ubuntu/.ssh
+        path: "/home/{{ remote_user }}/.ssh"
         state: directory
         owner: "{{ remote_user }}"
         group: "{{ remote_user }}"
@@ -58,7 +58,7 @@
     - name: Copy SSH keys to authorized_keys file
       ansible.builtin.copy:
         content: "{{ item }}"
-        dest: /home/ubuntu/.ssh/authorized_keys
+        dest: "/home/{{ remote_user }}/.ssh/authorized_keys"
         owner: "{{ remote_user }}" 
         group: "{{ remote_user }}"
         mode: '0600'
