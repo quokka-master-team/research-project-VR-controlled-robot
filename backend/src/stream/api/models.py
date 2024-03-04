@@ -2,14 +2,14 @@ from uuid import UUID
 from pydantic import BaseModel, field_validator
 from src.stream.domain.value_objects import StreamUnitName, StreamUnitLocation
 from src.core.api.models import ResponseModel
-from src.core.types import URL
 
 
 class PostStreamUnit(BaseModel):
     name: str
     location: str
     description: str
-    video_url: str
+    host: str
+    port: int
     api_url: str
     secret: str | None = None
 
@@ -23,12 +23,6 @@ class PostStreamUnit(BaseModel):
     @classmethod
     def validate_location(cls, value: str) -> str:
         StreamUnitLocation(value)
-        return value
-
-    @field_validator("video_url", "api_url")
-    @classmethod
-    def validate_url(cls, value: str) -> str:
-        URL(value)
         return value
 
 

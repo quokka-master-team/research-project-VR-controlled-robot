@@ -4,7 +4,7 @@ class Log
 {
 	Log() {
 		spdlog::set_pattern("[%T] [%^%l%$] %v");
-		spdlog::set_level(spdlog::level::info);
+		spdlog::set_level(spdlog::level::debug);
 	}
 
 	~Log() = default;
@@ -20,6 +20,11 @@ public:
 	{
 		static Log instance;
 		return instance;
+	}
+
+	inline bool IsDebugOn() const
+	{
+		return true; //spdlog::level::debug == spdlog::get_level();
 	}
 
 	inline void Debug(const std::string& message) const

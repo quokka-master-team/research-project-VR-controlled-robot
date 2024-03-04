@@ -6,4 +6,7 @@
     - name: os_config
     - name: wireguard
       become: yes
-
+    - name: services
+      become: yes
+    - name: apps.install.python
+      become: yes

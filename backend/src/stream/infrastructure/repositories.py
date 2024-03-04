@@ -27,7 +27,8 @@ class StreamUnitRepository:
         name: StreamUnitName,
         location: StreamUnitLocation,
         description: str,
-        video_url: URL,
+        host: str,
+        port: int,
         api_url: URL,
         secret: str | None,
     ) -> None:
@@ -38,21 +39,24 @@ class StreamUnitRepository:
                 name=name,
                 location=str(location),
                 description=description,
-                video_url=str(video_url),
+                host=host,
+                port=port,
                 api_url=str(api_url),
                 secret=secret,
             )
         )
 
     def stream_unit_with_unique_params_exist(
-        self, name: StreamUnitName, video_url: URL, api_url: URL
+        self, name: StreamUnitName, host: str, port: int, api_url: URL
     ) -> bool:
         return self._session.query(
             sqla.exists().where(
                 sqla.or_(
                     StreamUnit.name == name,
-                    StreamUnit.video_url == str(video_url),
                     StreamUnit.api_url == str(api_url),
+                    sqla.and_(
+                        StreamUnit.port == port, StreamUnit.host == host
+                    ),
                 )
             )
         ).scalar()

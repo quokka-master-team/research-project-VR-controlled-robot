@@ -1,0 +1,8 @@
+# This file is a configuration of the management server.
+# The software works by responding to the commands from the client
+# Commands are described in the VideoStream.cpp class
+# Here you should provide a server IP and PORT from which you want to connect
+#
+management:
+  server: 10.0.0.9
+  port: 5020

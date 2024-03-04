@@ -11,7 +11,8 @@ def stream_unit_to_dto_mapper(stream_unit: "StreamUnit") -> StreamUnitDto:
     return StreamUnitDto(
         id=stream_unit.id,
         secret=stream_unit.secret,
-        video_url=URL(stream_unit.video_url),
+        host=stream_unit.host,
+        port=stream_unit.port,
         api_url=URL(stream_unit.api_url),
     )
 

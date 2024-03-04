@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from authlib.integrations.starlette_client import OAuth
 from starlette.middleware.sessions import SessionMiddleware
 from src.core.utils import import_from
@@ -8,6 +9,7 @@ from src.config import Settings
 from src.di import all_modules
 from src.core.api.models import ErrorMessage
 from kink import di
+import logging
 
 
 def create_app(settings: type[Settings] = Settings) -> FastAPI:
@@ -23,6 +25,7 @@ def create_app(settings: type[Settings] = Settings) -> FastAPI:
     app = FastAPI()
     app_settings = settings()
 
+    configure_logging(app_settings)
     configure_di(app_settings)
     configure_extensions(app_settings)
     configure_middleware(app, app_settings)
@@ -31,6 +34,10 @@ def create_app(settings: type[Settings] = Settings) -> FastAPI:
     register_routers(app, app_settings)
 
     return app
+
+
+def configure_logging(settings: Settings) -> None:
+    logging.basicConfig(encoding="utf-8", level=settings.LOGGING_LEVEL)
 
 
 def configure_di(settings: Settings) -> None:
@@ -78,6 +85,13 @@ def configure_extensions(settings: Settings) -> None:
 
 def configure_middleware(app: FastAPI, settings: Settings) -> None:
     app.add_middleware(SessionMiddleware, secret_key=settings.APP_SECRET)
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 
 def configure_handlers(app: FastAPI) -> None:

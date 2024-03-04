@@ -2,104 +2,239 @@
 #include <stdexcept>
 #include <chrono>
 
-void VideoStream::ValidatePipeline(GError*& handle)
+bool VideoStream::IsArgumentsCountValid(const std::vector<std::string> &arguments, int expected)
 {
-    if (handle)
+    if (arguments.size() != expected)
     {
-        throw std::runtime_error("Failed to create pipeline: " + std::string(handle->message));
-    }
-
-    if (!this->pipeline)
-    {
-        throw std::runtime_error("Failed to create pipeline: Unknown error.");
-    }
-}
-
-void VideoStream::HandleCommand(const std::string& command)
-{
-    log.Info("Received command: " + command);
-
-    if (command == "START")    this->Start();
-    if (command == "STOP")     this->Stop();
-    if (command == "EXIT")     this->listenToClient.store(false);
-}
-
-void VideoStream::HandleRequest(std::shared_ptr<asio::ip::tcp::socket> socket)
-{
-    auto buffer = std::make_shared<asio::streambuf>();
-    asio::async_read_until(*socket, *buffer, "\n", 
-        [this, buffer, socket](const asio::error_code& error, size_t)
+        std::string argumentList = "";
+        for (auto arg : arguments)
         {
-            if (error)
-            {
-                log.Error("Error while retreiving client message: " + error.message());
-                socket->close();
+            argumentList += arg + "; ";
+        }
 
-                return;
+        log.Error(
+            "Expected " + std::to_string(expected) + 
+            " argument(s), got " + std::to_string(arguments.size()) + ": " + argumentList);
+
+        return false;
+    }
+
+    return true;
+}
+
+void VideoStream::HandleCommand(const std::string &command)
+{
+    auto commandText = std::istringstream(command);
+    auto tokens = std::vector<std::string>
+    {
+        std::istream_iterator<std::string>
+        {
+            commandText
+        },
+        std::istream_iterator<std::string>{}
+    };
+
+    if (this->stream == nullptr)
+    {
+        if (!(tokens[0] == "PLAIN" || tokens[0] == "RTSP"))
+        {
+            log.Error("Streaming is not initialized! Use for ex. 'PLAIN' command first.");
+            return;
+        }
+    }
+
+    auto searchedCommand = this->command.find(tokens[0]);
+    if (searchedCommand != this->command.end())
+    {
+        auto args = std::vector<std::string>(tokens.begin() + 1, tokens.end());
+        
+        if (log.IsDebugOn())
+        {
+            std::string restOfCommand;
+            for (auto arg : args)
+            {
+                restOfCommand += " " + arg;
             }
 
-            std::istream input(buffer.get());
-            std::string line;
-            std::getline(input, line);
+            std::string remoteIP = listener.remote_endpoint().address().to_string();
+            unsigned short remotePort = listener.remote_endpoint().port();
 
-            this->HandleCommand(line);
-            
-            socket->close();
+            log.Debug(remoteIP + ":" + std::to_string(remotePort) + " => " + searchedCommand->first + restOfCommand);
         }
-    );
+        
+        searchedCommand->second(args);
+    }
+    else
+    {
+        log.Warning("Received unknown command: " + command + ". Ignoring.");
+    }
+}
+
+void VideoStream::HandleRequest()
+{
+    try
+    {
+        auto buffer = asio::streambuf();
+        asio::read_until(listener, buffer, '\n');
+
+        std::istream input(&buffer);
+        std::string line;
+        std::getline(input, line);
+
+        if (!line.empty())
+        {
+            this->HandleCommand(line);
+            listener.send(asio::buffer(""));
+        }
+    }
+    catch (const std::system_error& e)
+    {
+        auto reason = std::string(e.what());
+
+        log.Warning("Bad character: " + reason);
+        if (listener.is_open())
+        {
+            listener.send(asio::buffer("Fail: " + reason));
+        }
+        
+        this->command["DISCONNECT"](std::vector<std::string>());
+    }
 }
 
 void VideoStream::ListenForRequests()
 {
-    acceptor->async_accept(
-        [this](const asio::error_code& error, asio::ip::tcp::socket socket) 
-        {
-            if (error)
-            {
-                log.Error("Error while setting up endpoint: " + error.message());
-                return;
-            }
+    listener = acceptor->accept();
 
-            this->HandleRequest(
-                std::make_shared<asio::ip::tcp::socket>(std::move(socket))
-            );
-        }
-    );
-}
-
-void VideoStream::SetPipeline(const std::string& str)
-{
-    if (this->pipeline != nullptr)
+    this->closeSocketRequest = false;
+    while (!this->closeSocketRequest)
     {
-        gst_object_unref(GST_OBJECT(this->pipeline));
+        this->HandleRequest();
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 
-    GError* errorHandle = nullptr;
-    this->pipeline = gst_parse_launch(str.c_str(), &errorHandle);
+    if(listener.is_open())
+    {
+        listener.close();
+    }
+    log.Info("Client disconnected!");
+}
 
-    this->ValidatePipeline(errorHandle);
+VideoStream::VideoStream()
+{
+    this->command["START"] = [this](const std::vector<std::string>&)
+    {
+        if (!this->stream->IsStreaming())
+        {
+            this->stream->Start();
+        }
+        else
+        {
+            log.Info("Stream is live already. Stop it to run again.");
+        }
+    };
+
+    this->command["STOP"] = [this](const std::vector<std::string>& args)
+    {
+        if (this->stream->IsStreaming())
+        {
+            this->stream->Stop();
+        }
+        else
+        {
+            log.Info("Stream wasn't live.");
+        }
+    };
+
+    this->command["EXIT"] = [this](const std::vector<std::string>& args)
+    {
+        this->command["DISCONNECT"](args);
+        
+        if (this->stream->IsStreaming())
+        {
+            this->stream->Stop();
+        }
+
+        this->listenToClient.store(false);
+    };
+
+    this->command["USE"] = [this](const std::vector<std::string>& args)
+    {
+        if (args.empty())
+        {
+            this->log.Error("Expected pipeline argument!");
+            return;
+        }
+
+        std::string pipeline = "";
+        for (auto arg : args)
+        {
+            pipeline += arg + " ";
+        }
+
+        if (this->stream->IsStreaming())
+        {
+            this->command["STOP"](args);
+            this->stream->SetPipeline(pipeline);
+            this->command["START"](args);
+        }
+        else
+        {
+            this->stream->SetPipeline(pipeline);
+        }
+    };
+
+    this->command["PLAIN"] = [this](const std::vector<std::string>&)
+    {
+        if (this->stream)
+        {
+            this->stream.reset();
+        }
+        this->stream = std::make_unique<BasicStream>();
+    };
+
+    this->command["RTSP"] = [this](const std::vector<std::string>& args)
+    {
+        if (!this->IsArgumentsCountValid(args, 2))
+        {
+            return;
+        }
+        
+        if (this->stream)
+        {
+            this->stream.reset();
+        }
+        this->stream = std::make_unique<RTSPStream>();
+        RTSPStream* rtspStream = static_cast<RTSPStream*>(this->stream.get());
+
+        rtspStream->SetEndpoint(args[0], args[1]);
+    };
+
+    this->command["DISCONNECT"] = [this](const std::vector<std::string>&)
+    { 
+        this->closeSocketRequest = true;
+    };
 }
 
 void VideoStream::ListenOn(const std::string &serverIp, unsigned short port)
 {
+    log.Info("Binding to " + serverIp + ":" + std::to_string(port) + "...");
+
     acceptor = std::make_unique<asio::ip::tcp::acceptor>(
-        this->clientContext, asio::ip::tcp::endpoint(asio::ip::make_address(serverIp), port)
+        this->context, asio::ip::tcp::endpoint(asio::ip::make_address(serverIp), port)
     );
 
     this->listenToClient.store(true);
-    this->clientListener = std::thread([this]() 
+    this->listenerThread = std::thread([this]() 
     {
         while (this->listenToClient.load())
         {
             this->ListenForRequests();
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-            this->clientContext.run();
-            this->clientContext.reset();
+            this->context.run();
+            this->context.reset();
         }
     });
-
-    log.Info(name + " is listening on " + serverIp + ":" + std::to_string(port));
 }
 
 bool VideoStream::IsListening()
@@ -107,68 +242,13 @@ bool VideoStream::IsListening()
     return this->listenToClient.load();
 }
 
-void VideoStream::Start()
-{
-    if (isStreaming)
-    {
-        this->log.Warning(this->name + ": I'm already streaming!");
-        return;
-    }
-
-    if (gst_element_set_state(pipeline, GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE)
-    {
-        throw std::runtime_error("Failed to start pipeline!");
-    }
-
-    this->streamLoop = g_main_loop_new(NULL, FALSE);
-    this->streamThread = std::make_unique<std::thread>([this]() {
-        g_main_loop_run(this->streamLoop);
-    });
-    this->isStreaming = true;
-}
-
-void VideoStream::Stop()
-{
-    if (!this->isStreaming)
-    {
-        this->log.Warning(this->name + ": I wasn't streaming this time...");
-        return;
-    }
-
-    if (this->streamLoop)
-    {
-        g_main_loop_quit(this->streamLoop);
-        gst_element_set_state(this->pipeline, GST_STATE_NULL);
-    }
-
-    if (this->streamThread && this->streamThread->joinable()) {
-        this->streamThread->join();
-    }
-    this->isStreaming = false;
-}
-
 VideoStream::~VideoStream()
 {
-    this->listenToClient.store(false);
-    this->clientContext.stop();
+    listenToClient.store(false);
+    context.stop();
 
-    if (this->clientListener.joinable())
+    if (listenerThread.joinable())
     {
-        this->clientListener.join();
+        listenerThread.join();
     }
-
-    this->Stop();
-
-    if (this->pipeline)
-    {
-        gst_element_set_state(pipeline, GST_STATE_NULL);
-        gst_object_unref(GST_OBJECT(this->pipeline));
-    }
-
-    if (this->streamLoop)
-    {
-        g_main_loop_unref(this->streamLoop);
-    }
-    
-    log.Info(this->name + " closed!");
 }

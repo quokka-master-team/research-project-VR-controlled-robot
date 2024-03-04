@@ -1,44 +1,79 @@
 # This is server code to send video frames over UDP
-import cv2, imutils, socket
-import numpy as np
-import time
+import cv2
+import imutils
+import socket
 import base64
+import logging
+from threading import Thread
+from typing import Tuple
+
+logging.basicConfig(level=logging.INFO)
+
+Address = Tuple[str, int]
 
 BUFF_SIZE = 65536
-server_socket = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
-server_socket.setsockopt(socket.SOL_SOCKET,socket.SO_RCVBUF,BUFF_SIZE)
-host_name = socket.gethostname()
-host_ip = '10.0.0.9'#  socket.gethostbyname(robot-NUC8i5BEH)
-print(host_ip)
-port = 1234
-socket_address = (host_ip,port)
-server_socket.bind(socket_address)
-print('Listening at:',socket_address)
+FRAME_WIDTH = 600
+TIMEOUT = 5
 
-vid = cv2.VideoCapture(0) #  replace 'rocket.mp4' with 0 for webcam
-fps,st,frames_to_count,cnt = (0,0,20,0)
 
-while True:
-    msg,client_addr = server_socket.recvfrom(BUFF_SIZE)
-    print('GOT connection from ',client_addr)
-    WIDTH=600
-    while(vid.isOpened()):
-        _,frame = vid.read()
-        frame = imutils.resize(frame,width=WIDTH)
-        encoded,buffer = cv2.imencode('.jpg',frame,[cv2.IMWRITE_JPEG_QUALITY,80])
-        message = base64.b64encode(buffer)
-        server_socket.sendto(message,client_addr)
-        frame = cv2.putText(frame,'FPS: '+str(fps),(10,40),cv2.FONT_HERSHEY_SIMPLEX,0.7,(0,0,255),2)
-        key = cv2.waitKey(1) & 0xFF
-        if key == ord('q'):
-            server_socket.close()
-            break
-        if cnt == frames_to_count:
+class ClientThread(Thread):
+    def __init__(self, address: Address, server: socket.socket, vid: cv2.VideoCapture) -> None:
+        super().__init__()
+        self.address = address
+        self.server = server
+        self.vid = vid
+        self.stop = False
+
+    def run(self):
+        while self.vid.isOpened() and not self.stop:
+            _, frame = self.vid.read()
+            frame = imutils.resize(frame, width=FRAME_WIDTH)
+            encoded, buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 80])
+            message = base64.b64encode(buffer)
+
             try:
-                fps = round(frames_to_count/(time.time()-st))
-                st=time.time()
-                cnt=0
-            except:
-                pass
-        cnt+=1
+                self.server.sendto(message, self.address)
+            except Exception as exc:
+                logging.error(str(exc))
 
+        logging.info(f"Closing connection with: {self.address}")
+
+
+def _create_socket(address: Address) -> socket.socket:
+    server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    server.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, BUFF_SIZE)
+    server.bind(address)
+
+    return server
+
+
+def _connect_client(server: socket.socket) -> Address:
+    _, client_address = server.recvfrom(1024)
+    server.sendto(
+        str.encode("Connected"),
+        client_address
+    )
+    logging.info(f"Connection from: {client_address}")
+
+    return client_address
+
+
+def main(host: str, port: int) -> None:
+    address = (host, port)
+
+    vid = cv2.VideoCapture(0)  # replace 'rocket.mp4' with 0 for webcam
+    server = _create_socket(address)
+    logging.info(f'Waiting for connections on {address}')
+
+    prev_conn = None
+    while True:
+        client_address = _connect_client(server)
+        if prev_conn:
+            prev_conn.stop = True
+
+        thread = ClientThread(client_address, server, vid)
+        thread.start()
+        prev_conn = thread
+
+
+main(host='10.0.0.9', port=1234)
