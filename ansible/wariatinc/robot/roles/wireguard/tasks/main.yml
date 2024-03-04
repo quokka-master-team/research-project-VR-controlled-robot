@@ -32,6 +32,11 @@
   tags:
     - wireguard
 
+- name: STOP wireguard
+  ansible.builtin.command: "wg-quick down {{ wireguard_iface }}"
+  tags:
+    - wireguard
+
 - name: Wireguard - set server config file
   ansible.builtin.template:
     dest: "/etc/wireguard/{{ wireguard_iface }}.conf"
@@ -39,24 +44,6 @@
     owner: root
     group: root
     mode: '0600'
-  tags:
-    - wireguard_server
-
-- name: Enable and persist ip forwarding
-  ansible.posix.sysctl:
-    name: net.ipv4.ip_forward
-    value: "1"
-    state: present
-    sysctl_set: yes
-    reload: yes
-  tags:
-    - wireguard_server
-
-- name: Start wireguard and enable on boot
-  ansible.builtin.systemd:
-    name: "wg-quick@{{ wireguard_iface }}"
-    state: started
-    enabled: yes
   tags:
     - wireguard_server
 
@@ -71,18 +58,27 @@
   tags:
     - wireguard_client
 
-- name: Restart WireGuard service on client host
-  ansible.builtin.systemd:
-    name: "wg-quick@{{ wireguard_iface }}"
-    state: restarted
-  tags:
-    - wireguard_client
-
-- name: DOWN wireguard
-  ansible.builtin.command: "wg-quick down {{ wireguard_iface }}"
-
-- name: UP wireguard with new config
+- name: START wireguard
   ansible.builtin.command: "wg-quick up {{ wireguard_iface }}"
+  tags:
+    - wireguard
+
+- name: Enable and persist ip forwarding
+  ansible.posix.sysctl:
+    name: net.ipv4.ip_forward
+    value: "1"
+    state: present
+    sysctl_set: yes
+    reload: yes
+  tags:
+    - wireguard_server
+
+# - name: Start wireguard and enable on boot
+#   ansible.builtin.systemd:
+#     name: "wg-quick@{{ wireguard_iface }}"
+#     state: restarted
+#   tags:
+#     - wireguard
 
 - name: Include task list in play
   ansible.builtin.include_tasks: port_forwarding.yml

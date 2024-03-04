@@ -1,7 +1,75 @@
 wireguard_extra_peers:
   lukasz:
     ip: "10.0.0.2"
-    public_key: "HGVT1rA1StFLn7DMRYnZbyl7OXOrwpZW70lnfZH+UAI="
+    public_key: "Jj9fI7DATt1J4VNEdsROiqdmlwXzZ1AD/PMQaJMhdFU="
   hubert:
     ip: "10.0.0.3"
     public_key: "KHkmjGt0XC+aqB4g6E4PWlbudLQhe+Yw3lkn1zVLL2M="
+  michal:
+    ip: "10.0.0.4"
+    public_key: "e7bL2Sa3X4rBSvdi6THRdJz6Br5e1Idh7Msu5gR/Wkc="
+  gcp:
+    ip: "10.0.0.8"
+    public_key: "aUsa4hoiORbATGsjmRWK6H62xVlMlUaF4fzFrQWyXTs="
+
+
+users: 
+  - name: lszarecki
+    password: "***"
+    state: present
+  - name: jkoniuszewski
+    password: "***"
+    state: present
+  - name: devuser
+    password: "***"
+    state: present
+packages:
+  - tree
+  - wireguard
+  - resolvconf
+  - traceroute
+  - nftables
+  # - nautilus  # xrdp gui, open folders
+  # - xfce4-terminal  # xrdp gui, open folders
+  # - gnome-tweak-tool  # xrdp gui, open folders
+
+
+  forwarded_ports:
+  - protocol: tcp
+    vpn_server_port: 5020
+    peer_ip: "10.0.0.9"
+    peer_port: 5020
+  - protocol: udp  # do ogladania stream z socket
+    vpn_server_port: 9000
+    peer_ip: "10.0.0.9"
+    peer_port: 9000
+  # - protocol: tcp  # do ogladania stream z socket
+  #   vpn_server_port: 9000
+  #   peer_ip: "10.0.0.9"
+  #   peer_port: 9000
+  - protocol: tcp  # do polaczenia po ssh z nuc
+    vpn_server_port: 1024
+    peer_ip: "10.0.0.9"
+    peer_port: 22
+  - protocol: tcp  # do polaczenia po ssh z gcp
+    vpn_server_port: 1025
+    peer_ip: "10.0.0.8"
+    peer_port: 22
+  - protocol: tcp  # do polaczenia z flask server na gcp
+    vpn_server_port: 8020
+    peer_ip: "10.0.0.8"
+    peer_port: 8000
+  - protocol: tcp  # do polaczenia po xrdp z nuc
+    vpn_server_port: 3390
+    peer_ip: "10.0.0.9"
+    peer_port: 3389
+
+# Porty otwarte na OVH na wg0 interfejs
+server_in_ports:
+  udp:
+    - 9001
+    - 9002
+  tcp:
+    - 5000
+    - 5001
+    - 5002
