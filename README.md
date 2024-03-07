@@ -127,7 +127,7 @@ This command:
 * init database with data from [db_init.gz](backend/db/db_init.gz)
 * run migration on database using alembic migration tool 
 
-List of available commands:
+List of available **just** commands:
 ```
 Available recipes:
     app-bash
