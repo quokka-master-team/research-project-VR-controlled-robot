@@ -93,6 +93,30 @@ You can test a communication with Camera Server using **nc** (netcat) tool
     ```
 
 3. Run backend on OVH Server (it might be your own server)
+
+> [!IMPORTANT]  
+> Configure your own SSO: **Oauth2** and provide in [.env](backend/.env.template) 
+> file: IAM_CLIENT_ID, IAM_CLIENT_SECRET, IAM_DOMAIN, IAM_ALGORITHM
+
+How to obtain the Bearer Token:
+
+1. Send request:
+    ```http://<< OVH Server >>:<< App port >>/api/auth?redirect_uri=/```
+    
+    The user will be automatically added to users table in database
+2. Log in SSO
+3. Copy **token=** ... from url
+4. Paste copied token on page [jwt.io](https://jwt.io/)
+5. **id_token** is your Bearer Token
+6. Test authentication by sending this request:
+    ```
+    curl --request GET \
+        --url http://<< OVH Server >>:<< App port >>/api/auth/test \
+        --header 'Authorization: Bearer << YOUR TOKEN >>'
+  ```
+7. Add other roles for your using by running query:
+```INSERT INTO users_roles VALUES(user_id, role_id```
+
 ```
 just setup
 ```
@@ -125,6 +149,17 @@ Available recipes:
 ```
 
 You can configure backend using file [.env](backend/.env.template). Please read [REDME.me](backend/README.md)
+
+The backend endpoints can be accessed through Swagger at the following address:
+```
+http://<< OVH Server >>:<< App port >>/docs
+```
+[List of endpoints](docs/endpoints.png)
+
+To obtain the Bearer token use the following request:
+```
+http://<< OVH Server >>:<< App port >>/api/auth?redirect_uri=/
+```
 
 **Postgres Database Schema**
 
