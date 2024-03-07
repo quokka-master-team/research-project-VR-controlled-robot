@@ -88,8 +88,7 @@ You can test a communication with Camera Server using **nc** (netcat) tool
     * Place in your workspace 2 scripts from repo path: [working_scripts](robot/streaming_server/working_scripts)
     * Test communication with robot
     * Run server script
-    ```
-    python << repo location >>/research-project-VR-controlled-robot/robot/streaming_server/working_scripts/robot_command_server.py
+    ```<< your workspace path >> /robot_command_server.py
     ```
 
 3. Run backend on OVH Server (it might be your own server)
