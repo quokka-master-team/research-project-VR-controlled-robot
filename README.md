@@ -122,9 +122,9 @@ just setup
 This command: 
 * create a venv using your Python system interpreter (should be 3.11)
 * install required packages to venv
-* build FastAPI application using docker-compose file: ***compose.yml***
+* build FastAPI application using docker-compose file: [compose.yml](backend/compose.yaml)
 * create Postgres database using docker-compose 
-* init database with data from ***db/db_init.gz***
+* init database with data from [db_init.gz](backend/db/db_init.gz)
 * run migration on database using alembic migration tool 
 
 List of available commands:
