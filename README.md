@@ -155,10 +155,6 @@ http://<< OVH Server >>:<< App port >>/docs
 ```
 [List of endpoints](docs/endpoints.png)
 
-To obtain the Bearer token use the following request:
-```
-http://<< OVH Server >>:<< App port >>/api/auth?redirect_uri=/
-```
 
 **Postgres Database Schema**
 
