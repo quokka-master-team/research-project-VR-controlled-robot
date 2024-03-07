@@ -87,9 +87,7 @@ You can test a communication with Camera Server using **nc** (netcat) tool
     * Setup the ROS catkin workspace on Onboard Computer ([tutorial](https://dabit-industries.github.io/turtlebot2-tutorials/08b-ROSPY_Building.html))
     * Place in your workspace 2 scripts from repo path: [working_scripts](robot/streaming_server/working_scripts)
     * Test communication with robot
-    * Run server script
-    ```<< your workspace path >> /robot_command_server.py
-    ```
+    * Run server script ```python << your workspace path >> /robot_command_server.py```
 
 3. Run backend on OVH Server (it might be your own server)
 
