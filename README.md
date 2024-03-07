@@ -103,7 +103,7 @@ You can test a communication with Camera Server using **nc** (netcat) tool
 >    The user will be automatically added to users table in database
 > 2. Log in SSO
 > 3. Copy **token=** ... from url
-> 4. Paste copied token on page [jwt.io](https://jwt.io/){:target="_blank"}
+> 4. Paste copied token on page [jwt.io](https://jwt.io/)
 > 5. **id_token** is your Bearer Token
 > 6. Test authentication by sending this request:
 >    ```
