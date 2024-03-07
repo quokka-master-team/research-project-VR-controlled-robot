@@ -111,9 +111,9 @@ You can test a communication with Camera Server using **nc** (netcat) tool
 >        --url http://<< OVH Server >>:<< App port >>/api/auth/test \
 >        --header 'Authorization: Bearer << YOUR TOKEN >>'
 >    ```
-> 7. Add other roles for your using by running query:
+> 7. Add other roles for your user by running this query:
 >    ```
->    INSERT INTO users_roles VALUES(user_id, role_id
+>    INSERT INTO users_roles VALUES(user_id, role_id)
 >    ```
 
 ```
