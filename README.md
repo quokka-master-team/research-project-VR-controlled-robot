@@ -94,25 +94,27 @@ You can test a communication with Camera Server using **nc** (netcat) tool
 > [!IMPORTANT]  
 > Configure your own SSO: **Oauth2** and provide in [.env](backend/.env.template) 
 > file: IAM_CLIENT_ID, IAM_CLIENT_SECRET, IAM_DOMAIN, IAM_ALGORITHM
-
-How to obtain the Bearer Token:
-
-1. Send request:
-    ```http://<< OVH Server >>:<< App port >>/api/auth?redirect_uri=/```
-    
-    The user will be automatically added to users table in database
-2. Log in SSO
-3. Copy **token=** ... from url
-4. Paste copied token on page [jwt.io](https://jwt.io/)
-5. **id_token** is your Bearer Token
-6. Test authentication by sending this request:
-    ```
-    curl --request GET \
-        --url http://<< OVH Server >>:<< App port >>/api/auth/test \
-        --header 'Authorization: Bearer << YOUR TOKEN >>'
-  ```
-7. Add other roles for your using by running query:
-```INSERT INTO users_roles VALUES(user_id, role_id```
+>
+> How to obtain the Bearer Token:
+>
+> 1. Send request:
+>    ```http://<< OVH Server >>:<< App port >>/api/auth?redirect_uri=/```
+>    
+>    The user will be automatically added to users table in database
+> 2. Log in SSO
+> 3. Copy **token=** ... from url
+> 4. Paste copied token on page [jwt.io](https://jwt.io/)
+> 5. **id_token** is your Bearer Token
+> 6. Test authentication by sending this request:
+>    ```
+>    curl --request GET \
+>        --url http://<< OVH Server >>:<< App port >>/api/auth/test \
+>        --header 'Authorization: Bearer << YOUR TOKEN >>'
+>    ```
+> 7. Add other roles for your using by running query:
+>    ```
+>    INSERT INTO users_roles VALUES(user_id, role_id
+>    ```
 
 ```
 just setup
