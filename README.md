@@ -55,7 +55,7 @@ After configuring the network, it is possible to setup the system.
 
 Install on specific server the right software.
 #### Onboard computer (Intel NUC Server)
-* gstreamer (Detailed instruction: ***/robot/camera/README.md***)
+* gstreamer (Detailed instruction: [README.md](robot/camera/README.md))
 * Python >= 3.9 
 * ROS
 
