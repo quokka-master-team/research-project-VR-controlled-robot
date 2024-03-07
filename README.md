@@ -13,7 +13,7 @@
 5. ??? Additional server on GCP
 
 ### Network tools:
-The configuration of these tools was defined using ansible in repo directory ***ansible***.
+The configuration of these tools was defined using ansible in [path](ansible/wariatinc/robot/).
 
 #### Wireguard (VPN)
 It is a key element of the infrastracture. It provides a communication between OVH Server and Intel NUC Server. To configure properly the VPN Server on OVH you can run the following command:
@@ -25,7 +25,7 @@ To configure the peer (in our case Intel NUC Server) you can run the following c
 ansible-playbook -i hosts.ini playbooks/config.yml --tags "wireguard, wireguard_client" -v --limit ovh_server
 ```
 !!! Remember to provide all needed credentials.
-Example .conf files for wireguard you can find in README.md in ***ansible*** directory. 
+Example .conf files for wireguard you can find in [README.md](ansible/README.md)
 You can also connect your own computer to Wireguard VPN Server (on OVH Server) to have an access to Intel NUC Server in internal network. 
 
 #### nftables
@@ -85,7 +85,7 @@ You can test a communication with Camera Server using **nc** (netcat) tool
     * Connect robot to Onboard Computer
     * Install MAVROS on Onboard Computer
     * Setup the ROS catkin workspace on Onboard Computer ([tutorial](https://dabit-industries.github.io/turtlebot2-tutorials/08b-ROSPY_Building.html))
-    * Place in your workspace 2 scripts from repo path: ***research-project-VR-controlled-robot/robot/streaming_server/working_scripts***
+    * Place in your workspace 2 scripts from repo path: [working_scripts](robot/streaming_server/working_scripts)
     * Test communication with robot
     * Run server script
     ```
@@ -123,6 +123,8 @@ Available recipes:
     setup
     upgrade-db
 ```
+
+You can configure backend using file [.env](backend/.env.template). Please read [REDME.me](backend/README.md)
 
 **Postgres Database Schema**
 
