@@ -34,42 +34,42 @@ packages:
   # - gnome-tweak-tool  # xrdp gui, open folders
 
 
-  forwarded_ports:
-  - protocol: tcp
-    vpn_server_port: 5020
-    peer_ip: "10.0.0.9"
-    peer_port: 5020
-  - protocol: udp  # do ogladania stream z socket
-    vpn_server_port: 9000
-    peer_ip: "10.0.0.9"
-    peer_port: 9000
-  # - protocol: tcp  # do ogladania stream z socket
-  #   vpn_server_port: 9000
-  #   peer_ip: "10.0.0.9"
-  #   peer_port: 9000
-  - protocol: tcp  # do polaczenia po ssh z nuc
-    vpn_server_port: 1024
-    peer_ip: "10.0.0.9"
-    peer_port: 22
-  - protocol: tcp  # do polaczenia po ssh z gcp
-    vpn_server_port: 1025
-    peer_ip: "10.0.0.8"
-    peer_port: 22
-  - protocol: tcp  # do polaczenia z flask server na gcp
-    vpn_server_port: 8020
-    peer_ip: "10.0.0.8"
-    peer_port: 8000
-  - protocol: tcp  # do polaczenia po xrdp z nuc
-    vpn_server_port: 3390
-    peer_ip: "10.0.0.9"
-    peer_port: 3389
+forwarded_ports:
+- protocol: tcp
+  vpn_server_port: 5020
+  peer_ip: "10.0.0.9"
+  peer_port: 5020
+- protocol: udp  # do ogladania stream z socket
+  vpn_server_port: 9000
+  peer_ip: "10.0.0.9"
+  peer_port: 9000
+# - protocol: tcp  # do ogladania stream z socket
+#   vpn_server_port: 9000
+#   peer_ip: "10.0.0.9"
+#   peer_port: 9000
+- protocol: tcp  # do polaczenia po ssh z nuc
+  vpn_server_port: 1024
+  peer_ip: "10.0.0.9"
+  peer_port: 22
+- protocol: tcp  # do polaczenia po ssh z gcp
+  vpn_server_port: 1025
+  peer_ip: "10.0.0.8"
+  peer_port: 22
+- protocol: tcp  # do polaczenia z flask server na gcp
+  vpn_server_port: 8020
+  peer_ip: "10.0.0.8"
+  peer_port: 8000
+- protocol: tcp  # do polaczenia po xrdp z nuc
+  vpn_server_port: 3390
+  peer_ip: "10.0.0.9"
+  peer_port: 3389
 
 # Porty otwarte na OVH na wg0 interfejs
 server_in_ports:
-  udp:
-    - 9001
-    - 9002
-  tcp:
-    - 5000
-    - 5001
-    - 5002
+udp:
+  - 9001
+  - 9002
+tcp:
+  - 5000
+  - 5001
+  - 5002

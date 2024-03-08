@@ -101,6 +101,6 @@ AllowedIPs = 10.0.0.4/32
 
 [Peer]
 # gcp
-PublicKey = aUsa4hoiORbATGsjmRWK6H62xVlMlUaF4fzFrQWyXTs=
+PublicKey = << peer public key >>
 AllowedIPs = 10.0.0.8/32
 ```
